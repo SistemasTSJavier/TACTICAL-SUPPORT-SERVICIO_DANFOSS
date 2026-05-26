@@ -3,6 +3,8 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -28,11 +30,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build production
+      - name: Build for /docs (main branch Pages)
         run: npm run build
         env:
           GITHUB_ACTIONS: 'true'
           GITHUB_REPOSITORY: ${{ github.repository }}
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/docs/
 
       - name: Verify build output
         run: |
@@ -45,7 +48,24 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy dist to gh-pages branch
+      - name: Publish build to main/docs
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: main
+          target-folder: docs
+          clean: false
+          single-commit: true
+          commit-message: 'chore: actualizar sitio en docs/ [skip ci]'
+
+      - name: Build for gh-pages branch
+        run: npm run build
+        env:
+          GITHUB_ACTIONS: 'true'
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+
+      - name: Publish build to gh-pages branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
