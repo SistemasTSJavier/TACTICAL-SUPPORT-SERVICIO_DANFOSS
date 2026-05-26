@@ -11,6 +11,7 @@ import {
   type NivelDesempeno,
   setNomenclaturaActiva,
 } from '@/lib/nomenclatura'
+import { publicAssetPath } from '@/lib/basePath'
 import { COLORS, nivelOpacity } from '@/lib/colors'
 import { parseRrhhWorkbook } from '@/lib/parseHrExcel'
 
@@ -256,4 +257,4 @@ export async function loadExcelFromUrl(url: string): Promise<EvaluacionDataset> 
   return parseExcelArrayBuffer(buffer)
 }
 
-export const EXCEL_PUBLIC_PATH = `${import.meta.env.BASE_URL}Evaluacion%20Danfoss.xlsx`
+export const EXCEL_PUBLIC_PATH = publicAssetPath('Evaluacion Danfoss.xlsx')

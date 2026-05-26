@@ -1,12 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { EvaluacionProvider } from '@/context/EvaluacionProvider'
+import { appBasename } from '@/lib/basePath'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { PresentacionPage } from '@/pages/PresentacionPage'
 
 export default function App() {
   return (
     <EvaluacionProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <BrowserRouter basename={appBasename()}>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/presentacion" element={<PresentacionPage />} />
