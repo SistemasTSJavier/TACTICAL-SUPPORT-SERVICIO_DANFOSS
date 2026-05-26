@@ -39,12 +39,14 @@ jobs:
 
       - name: Verify build output
         run: |
+          echo "=== dist contents ==="
+          find dist -maxdepth 2 -type f | head -30
           if grep -q 'src/main.tsx' dist/index.html; then
             echo "ERROR: dist/index.html still points to dev source."
             exit 1
           fi
-          if [ ! -d dist/assets ]; then
-            echo "ERROR: dist/assets folder missing."
+          if ! find dist -name '*.js' | grep -q .; then
+            echo "ERROR: no JavaScript bundle found in dist."
             exit 1
           fi
 

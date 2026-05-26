@@ -2,17 +2,13 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/tactical-support-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Redirigiendo — DANFOSS</title>
-    <meta http-equiv="refresh" content="0; url=./docs/" />
-    <script>
-      location.replace('./docs/' + location.search + location.hash)
-    </script>
+    <meta name="description" content="Dashboard Evaluación 360 — Servicio DANFOSS" />
+    <title>Evaluación 360 — DANFOSS</title>
   </head>
   <body>
-    <p style="font-family: system-ui, sans-serif; padding: 2rem">
-      Cargando dashboard…
-      <a href="./docs/">Abrir manualmente</a>
-    </p>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
