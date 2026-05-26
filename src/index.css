@@ -1,0 +1,136 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-navy: #000b29;
+  --color-navy-light: #000b29;
+  --color-navy-mid: #000b29;
+  --color-navy-muted: #000b29;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-surface: #ffffff;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #ffffff;
+  color: #000000;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+.presentation-dark {
+  background: #000b29;
+  color: #ffffff;
+}
+
+.presentation-dark .text-navy,
+.presentation-dark .text-black {
+  color: #ffffff;
+}
+
+.presentation-dark .text-black\/55,
+.presentation-dark .text-black\/60,
+.presentation-dark .text-black\/70 {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.chart-card-title {
+  letter-spacing: -0.02em;
+}
+
+.dashboard-main {
+  width: 100%;
+}
+
+.dashboard-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .dashboard-inner {
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-inner {
+    gap: 1.75rem;
+    padding: 1.5rem 2rem 2rem;
+  }
+}
+
+.chips-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #000b29 transparent;
+}
+
+.chips-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.chips-scroll::-webkit-scrollbar-thumb {
+  background: #000b29;
+  border-radius: 4px;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-light {
+  scrollbar-color: rgb(0 11 41 / 0.25) transparent;
+}
+
+.scrollbar-dark {
+  scrollbar-color: rgb(255 255 255 / 0.35) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-light::-webkit-scrollbar-thumb {
+  background: rgb(0 11 41 / 0.2);
+  border-radius: 6px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.25);
+  border-radius: 6px;
+}
+
+.presentation-slide {
+  width: 100%;
+}
+
+.presentation-dark .shadow-glow {
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 8px 32px rgb(0 0 0 / 0.35);
+}

@@ -1,0 +1,14 @@
+Coloca aquí tu archivo Excel con las hojas:
+
+1. Compromisos   — semanas, plantilla, vacantes, cumplimiento
+2. Bajas         — colaboradores y motivos de separación
+3. Ausentismos   — faltas por fecha y colaborador
+4. RESULTADOS    — evaluación 360 (oficiales, evaluadores, desempeño)
+
+Nombre del archivo: Evaluacion Danfoss.xlsx
+
+Luego ejecuta en la raíz del proyecto:
+
+  npm run import:data
+
+Eso copiará el Excel a public/ para que el dashboard lo lea automáticamente.

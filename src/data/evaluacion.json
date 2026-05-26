@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "titulo": "Evaluación 360",
+    "servicio": "DANFOSS",
+    "periodo": "Primer semestre 2025",
+    "fechaPresentacion": "23 de mayo de 2025",
+    "conclusiones": "El servicio DANFOSS mantiene un desempeño general en rango MEDIO, con oportunidades de mejora en alineación entre evaluadores. Se recomienda dar seguimiento a los oficiales pendientes de evaluación y reforzar el plan de desarrollo para quienes registran nivel BAJO."
+  },
+  "evaluadoresLabels": {
+    "shriner": "SHRINER CABRERA JOSE PAUL",
+    "davila": "DAVILA LOPEZ ADRIANA",
+    "rodriguez": "RODRIGUEZ ELIZONDO MARCO ANTONIO",
+    "cardenas": "CARDENAS DE LA CRUZ ALBI DE JESUS",
+    "armendariz": "ARMENDARIZ FLORES JOSE ROBERTO"
+  },
+  "oficiales": [
+    {
+      "id": "1",
+      "nombre": "AGUILAR MENDOZA CARLOS ALBERTO",
+      "evaluadores": { "shriner": 3.2, "davila": 3.4, "rodriguez": 3.1, "cardenas": 3.3, "armendariz": 3.2 },
+      "ts": 3.3,
+      "desempeno": 3.25,
+      "sinEvaluar": false
+    },
+    {
+      "id": "2",
+      "nombre": "BARRERA FLORES LUIS FERNANDO",
+      "evaluadores": { "shriner": 3.0, "davila": 3.2, "rodriguez": 2.9, "cardenas": 3.1, "armendariz": 3.0 },
+      "ts": 3.1,
+      "desempeno": 3.05,
+      "sinEvaluar": false
+    },
+    {
+      "id": "3",
+      "nombre": "CASTILLO RAMIREZ JORGE EDUARDO",
+      "evaluadores": { "shriner": 3.4, "davila": 3.5, "rodriguez": 3.3, "cardenas": 3.4, "armendariz": 3.3 },
+      "ts": 3.4,
+      "desempeno": 3.38,
+      "sinEvaluar": false
+    },
+    {
+      "id": "4",
+      "nombre": "DELGADO ORTEGA MIGUEL ANGEL",
+      "evaluadores": { "shriner": 2.8, "davila": 3.0, "rodriguez": 2.9, "cardenas": 2.8, "armendariz": 2.9 },
+      "ts": 2.9,
+      "desempeno": 2.88,
+      "sinEvaluar": false
+    },
+    {
+      "id": "5",
+      "nombre": "ESPARZA VEGA RICARDO",
+      "evaluadores": { "shriner": 3.5, "davila": 3.6, "rodriguez": 3.4, "cardenas": 3.5, "armendariz": 3.4 },
+      "ts": 3.5,
+      "desempeno": 3.48,
+      "sinEvaluar": false
+    },
+    {
+      "id": "6",
+      "nombre": "FLORES GARCIA ANA PATRICIA",
+      "evaluadores": { "shriner": 3.1, "davila": 3.3, "rodriguez": 3.0, "cardenas": 3.2, "armendariz": 3.1 },
+      "ts": 3.2,
+      "desempeno": 3.15,
+      "sinEvaluar": false
+    },
+    {
+      "id": "7",
+      "nombre": "GONZALEZ HERRERA PEDRO ANTONIO",
+      "evaluadores": { "shriner": 3.6, "davila": 3.7, "rodriguez": 3.5, "cardenas": 3.6, "armendariz": 3.5 },
+      "ts": 3.6,
+      "desempeno": 3.58,
+      "sinEvaluar": false
+    },
+    {
+      "id": "8",
+      "nombre": "HERNANDEZ LOPEZ RAUL",
+      "evaluadores": { "shriner": 3.0, "davila": 3.1, "rodriguez": 2.8, "cardenas": 3.0, "armendariz": 2.9 },
+      "ts": 3.0,
+      "desempeno": 2.97,
+      "sinEvaluar": false
+    },
+    {
+      "id": "9",
+      "nombre": "IBARRA SOTO DIEGO",
+      "evaluadores": { "shriner": 3.3, "davila": 3.4, "rodriguez": 3.2, "cardenas": 3.3, "armendariz": 3.2 },
+      "ts": 3.3,
+      "desempeno": 3.28,
+      "sinEvaluar": false
+    },
+    {
+      "id": "10",
+      "nombre": "JIMENEZ TORRES FERNANDO",
+      "evaluadores": { "shriner": 3.7, "davila": 3.8, "rodriguez": 3.6, "cardenas": 3.7, "armendariz": 3.6 },
+      "ts": 3.7,
+      "desempeno": 3.68,
+      "sinEvaluar": false
+    },
+    {
+      "id": "11",
+      "nombre": "LUNA MARTINEZ OSCAR",
+      "evaluadores": { "shriner": 2.9, "davila": 3.0, "rodriguez": 2.8, "cardenas": 2.9, "armendariz": 2.8 },
+      "ts": 2.9,
+      "desempeno": 2.88,
+      "sinEvaluar": false
+    },
+    {
+      "id": "12",
+      "nombre": "MORALES CRUZ SILVIA",
+      "evaluadores": { "shriner": 3.2, "davila": 3.3, "rodriguez": 3.1, "cardenas": 3.2, "armendariz": 3.1 },
+      "ts": 3.2,
+      "desempeno": 3.18,
+      "sinEvaluar": false
+    },
+    {
+      "id": "13",
+      "nombre": "NAVARRO PINEDA ARTURO",
+      "evaluadores": { "shriner": 3.4, "davila": 3.5, "rodriguez": 3.3, "cardenas": 3.4, "armendariz": 3.3 },
+      "ts": 3.4,
+      "desempeno": 3.38,
+      "sinEvaluar": false
+    },
+    {
+      "id": "14",
+      "nombre": "ORTIZ VALDEZ EMILIO",
+      "evaluadores": { "shriner": 3.5, "davila": 3.6, "rodriguez": 3.4, "cardenas": 3.5, "armendariz": 3.4 },
+      "ts": 3.5,
+      "desempeno": 3.48,
+      "sinEvaluar": false
+    },
+    {
+      "id": "15",
+      "nombre": "PEREZ SALAZAR HECTOR",
+      "evaluadores": { "shriner": 3.6, "davila": 3.7, "rodriguez": 3.5, "cardenas": 3.6, "armendariz": 3.5 },
+      "ts": 3.6,
+      "desempeno": 3.58,
+      "sinEvaluar": false
+    },
+    {
+      "id": "16",
+      "nombre": "QUIROZ DIAZ MARCO ANTONIO",
+      "evaluadores": { "shriner": 3.0, "davila": 3.1, "rodriguez": 2.9, "cardenas": 3.0, "armendariz": 2.9 },
+      "ts": 3.0,
+      "desempeno": 2.98,
+      "sinEvaluar": false
+    },
+    {
+      "id": "17",
+      "nombre": "RAMIREZ CANTU LAURA",
+      "evaluadores": { "shriner": 2.5, "davila": 2.6, "rodriguez": 2.4, "cardenas": 2.5, "armendariz": 2.4 },
+      "ts": 2.5,
+      "desempeno": 2.48,
+      "sinEvaluar": false
+    },
+    {
+      "id": "18",
+      "nombre": "SANCHEZ REYES GABRIEL",
+      "evaluadores": { "shriner": 3.1, "davila": 3.2, "rodriguez": 3.0, "cardenas": 3.1, "armendariz": 3.0 },
+      "ts": 3.1,
+      "desempeno": 3.08,
+      "sinEvaluar": false
+    },
+    {
+      "id": "19",
+      "nombre": "TORRES MEDINA IVAN",
+      "evaluadores": { "shriner": 3.3, "davila": 3.4, "rodriguez": 3.2, "cardenas": 3.3, "armendariz": 3.2 },
+      "ts": 3.3,
+      "desempeno": 3.28,
+      "sinEvaluar": false
+    },
+    {
+      "id": "20",
+      "nombre": "VEGA ROMERO PATRICIA",
+      "evaluadores": { "shriner": 3.0, "davila": 3.1, "rodriguez": 2.9, "cardenas": 3.0, "armendariz": 2.9 },
+      "ts": 3.0,
+      "desempeno": 2.98,
+      "sinEvaluar": false
+    },
+    {
+      "id": "21",
+      "nombre": "ZAMORA LEAL ROBERTO",
+      "evaluadores": { "shriner": null, "davila": null, "rodriguez": null, "cardenas": null, "armendariz": null },
+      "ts": null,
+      "desempeno": 0,
+      "sinEvaluar": true
+    },
+    {
+      "id": "22",
+      "nombre": "ACOSTA MIRANDA SANDRA",
+      "evaluadores": { "shriner": null, "davila": null, "rodriguez": null, "cardenas": null, "armendariz": null },
+      "ts": null,
+      "desempeno": 0,
+      "sinEvaluar": true
+    },
+    {
+      "id": "23",
+      "nombre": "BUSTOS ALVARADO JUAN CARLOS",
+      "evaluadores": { "shriner": null, "davila": null, "rodriguez": null, "cardenas": null, "armendariz": null },
+      "ts": null,
+      "desempeno": 0,
+      "sinEvaluar": true
+    }
+  ]
+}
