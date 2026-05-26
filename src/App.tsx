@@ -6,7 +6,7 @@ import { PresentacionPage } from '@/pages/PresentacionPage'
 export default function App() {
   return (
     <EvaluacionProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/presentacion" element={<PresentacionPage />} />

@@ -256,4 +256,4 @@ export async function loadExcelFromUrl(url: string): Promise<EvaluacionDataset> 
   return parseExcelArrayBuffer(buffer)
 }
 
-export const EXCEL_PUBLIC_PATH = '/Evaluacion%20Danfoss.xlsx'
+export const EXCEL_PUBLIC_PATH = `${import.meta.env.BASE_URL}Evaluacion%20Danfoss.xlsx`
