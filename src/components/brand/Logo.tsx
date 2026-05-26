@@ -1,6 +1,7 @@
+import { publicAssetPath } from '@/lib/basePath'
 import { cn } from '@/lib/utils'
 
-const LOGO_SRC = '/tactical-support-logo.png'
+const LOGO_SRC = publicAssetPath('tactical-support-logo.png')
 
 type LogoProps = {
   size?: 'sm' | 'md' | 'lg' | 'xl'
