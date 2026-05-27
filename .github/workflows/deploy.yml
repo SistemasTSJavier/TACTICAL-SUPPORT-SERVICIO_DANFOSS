@@ -3,19 +3,19 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main, master]
-    paths-ignore:
-      - 'docs/**'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,53 +24,43 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build for /docs (main branch Pages)
-        run: npm run build
-        env:
-          GITHUB_ACTIONS: 'true'
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/docs/
-
-      - name: Verify build output
-        run: |
-          echo "=== dist contents ==="
-          find dist -maxdepth 2 -type f | head -30
-          if grep -q 'src/main.tsx' dist/index.html; then
-            echo "ERROR: dist/index.html still points to dev source."
-            exit 1
-          fi
-          if ! find dist -name '*.js' | grep -q .; then
-            echo "ERROR: no JavaScript bundle found in dist."
-            exit 1
-          fi
-
-      - name: Publish build to main/docs
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist
-          branch: main
-          target-folder: docs
-          clean: false
-          single-commit: true
-          commit-message: 'chore: actualizar sitio en docs/ [skip ci]'
-
-      - name: Build for gh-pages branch
+      - name: Build
         run: npm run build
         env:
           GITHUB_ACTIONS: 'true'
           GITHUB_REPOSITORY: ${{ github.repository }}
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
 
-      - name: Publish build to gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Verify build
+        run: |
+          if grep -q 'src/main.tsx' dist/index.html; then
+            echo "ERROR: build apunta a codigo fuente."
+            exit 1
+          fi
+          if ! find dist -name '*.js' | grep -q .; then
+            echo "ERROR: no hay bundle JS en dist."
+            exit 1
+          fi
+          ls -la dist dist/assets | head -20
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: dist
-          branch: gh-pages
-          clean: true
-          single-commit: true
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
