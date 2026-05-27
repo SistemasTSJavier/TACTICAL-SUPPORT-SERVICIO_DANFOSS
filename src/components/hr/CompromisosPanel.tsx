@@ -16,11 +16,13 @@ import {
   hrFieldLabel,
   hrFieldValue,
   hrFilterPill,
+  hrFilterScrollRow,
+  hrFilterToggleGroup,
+  hrFilterToggleOption,
   hrKpiGrid,
   hrLabel,
   hrPanel,
   hrScrollArea,
-  HR_PANEL_HEIGHT,
 } from '@/lib/dashboardStyles'
 import { cn } from '@/lib/utils'
 
@@ -110,7 +112,12 @@ function PeriodoMovimiento({
       >
         {periodo.label}
         {esMes && periodo.semanas.length > 1 && (
-          <span className="ml-2 font-normal normal-case text-white/50">
+          <span
+            className={cn(
+              'ml-2 font-normal normal-case',
+              dark ? 'text-white/55' : 'text-black/45',
+            )}
+          >
             ({periodo.semanas.length} semanas)
           </span>
         )}
@@ -191,13 +198,6 @@ function PeriodoMovimiento({
         />
       </div>
     </div>
-  )
-}
-
-function pillGroup(dark: boolean) {
-  return cn(
-    'inline-flex rounded-full border p-1',
-    dark ? 'border-white/20 bg-white/5' : 'border-navy/12 bg-white',
   )
 }
 
@@ -428,58 +428,52 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
   const pill = (active: boolean) => hrFilterPill(active, dark)
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className={pillGroup(dark)}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3">
+        <div className={hrFilterToggleGroup(dark)}>
           <button
             type="button"
             onClick={() => setVista('semana')}
-            className={cn(
-              pill(vista === 'semana'),
-              'rounded-full border-0',
-              vista !== 'semana' && 'bg-transparent shadow-none ring-0',
-            )}
+            className={hrFilterToggleOption(vista === 'semana', dark)}
           >
             Por semana
           </button>
           <button
             type="button"
             onClick={() => setVista('mes')}
-            className={cn(
-              pill(vista === 'mes'),
-              'rounded-full border-0',
-              vista !== 'mes' && 'bg-transparent shadow-none ring-0',
-            )}
+            className={hrFilterToggleOption(vista === 'mes', dark)}
           >
             Por mes
           </button>
         </div>
 
         {vista === 'semana' && meses.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={hrLabel(dark)}>Mes</span>
-            <button
-              type="button"
-              onClick={() => setMesFiltro(TODOS_MESES)}
-              className={pill(mesFiltro === TODOS_MESES)}
-            >
-              Todos
-            </button>
-            {meses.map((m) => (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <span className={cn(hrLabel(dark), 'shrink-0')}>Mes</span>
+            <div className={hrFilterScrollRow()}>
               <button
-                key={m}
                 type="button"
-                onClick={() => setMesFiltro(m)}
-                className={pill(mesFiltro === m)}
+                onClick={() => setMesFiltro(TODOS_MESES)}
+                className={pill(mesFiltro === TODOS_MESES)}
               >
-                {monthKeyToLabel(m)}
+                Todos
               </button>
-            ))}
+              {meses.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMesFiltro(m)}
+                  className={pill(mesFiltro === m)}
+                >
+                  {monthKeyToLabel(m)}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className={hrFilterScrollRow()}>
         <button
           type="button"
           onClick={() => setPeriodoId('general')}
@@ -487,7 +481,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
             pill(periodoId === 'general'),
             'border-dashed',
             periodoId === 'general' &&
-              (dark ? 'border-white/40' : 'border-navy/30'),
+              (dark ? 'border-sky-300/60' : 'border-navy/30'),
           )}
         >
           General
@@ -498,7 +492,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
                 key={s.id}
                 type="button"
                 onClick={() => setPeriodoId(s.id)}
-                className={pill(s.id === periodoId)}
+                className={cn(pill(s.id === periodoId), 'whitespace-nowrap')}
               >
                 {s.fechaLabel}
               </button>
@@ -516,7 +510,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
       </div>
 
       {periodo && (
-        <div className={cn(hrKpiGrid(), 'lg:grid-cols-3 xl:grid-cols-6')}>
+        <div className={cn(hrKpiGrid(), 'sm:grid-cols-3 xl:grid-cols-6')}>
           <MetricTile dark={dark} value={String(periodo.plantilla)} label="Plantilla" />
           <MetricTile dark={dark} value={String(periodo.vacantes)} label="Vacantes" />
           <MetricTile
@@ -536,39 +530,34 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
         </div>
       )}
 
-      {periodo && (
-        <p
-          className={cn(
-            '-mt-2 text-center text-xs sm:text-sm',
-            dark ? 'text-white/50' : 'text-black/45',
-          )}
-        >
-          Cumplimiento según vacantes cubiertas con altas
-          {periodo.bajas > 0 ? ' (considerando bajas del periodo)' : ''}. Meta de
-          contratación = objetivo planificado en Excel.
-        </p>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
-        <div className={hrPanel(dark, 'overflow-visible p-4 sm:p-5')}>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
+        <div className={hrPanel(dark, 'overflow-visible p-3 sm:p-5')}>
           <p
             className={cn(
-              'mb-3 text-center text-xs font-bold uppercase tracking-widest',
-              dark ? 'text-white/55' : 'text-black/45',
+              'mb-2 text-center text-xs font-bold uppercase tracking-widest sm:mb-3 sm:text-sm',
+              dark ? 'text-white/70' : 'text-black/50',
             )}
           >
             {vista === 'mes' ? 'Tendencia por mes' : 'Tendencia por semana'}
           </p>
-          <ReactECharts
-            option={trendOption}
-            style={{ height: HR_PANEL_HEIGHT - 16, minHeight: 340, width: '100%' }}
-            notMerge
-            onEvents={{ click: onChartClick }}
-          />
+          <div className="min-h-[260px] w-full sm:min-h-[320px] lg:min-h-[360px]">
+            <ReactECharts
+              option={trendOption}
+              style={{ height: '100%', minHeight: 260, width: '100%' }}
+              className="!h-[260px] sm:!h-[320px] lg:!h-[360px]"
+              notMerge
+              onEvents={{ click: onChartClick }}
+            />
+          </div>
         </div>
 
         {periodo && (
-          <div className={hrPanel(dark, 'flex h-[400px] flex-col p-4 sm:p-5')}>
+          <div
+            className={hrPanel(
+              dark,
+              'flex min-h-[320px] flex-col p-3 sm:min-h-[360px] sm:p-5 lg:min-h-[400px]',
+            )}
+          >
             <PeriodoMovimiento periodo={periodo} dark={dark} />
           </div>
         )}

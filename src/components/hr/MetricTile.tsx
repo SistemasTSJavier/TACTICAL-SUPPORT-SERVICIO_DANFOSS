@@ -19,17 +19,17 @@ export function MetricTile({
   return (
     <div
       className={cn(
-        hrPanel(dark, 'px-4 py-4 text-center sm:px-5 sm:py-5'),
+        hrPanel(dark, 'min-w-0 px-3 py-3 text-center sm:px-5 sm:py-5'),
         accent &&
           (dark
-            ? '!border-white/25 !bg-white/12'
+            ? '!border-sky-400/50 !bg-sky-400/20 shadow-md shadow-sky-900/20'
             : '!border-navy !bg-navy shadow-md'),
         className,
       )}
     >
       <p
         className={cn(
-          'text-2xl font-bold tabular-nums tracking-tight sm:text-3xl lg:text-4xl',
+          'text-xl font-bold tabular-nums tracking-tight sm:text-3xl lg:text-4xl',
           dark || accent
             ? accent && !dark
               ? 'text-white'

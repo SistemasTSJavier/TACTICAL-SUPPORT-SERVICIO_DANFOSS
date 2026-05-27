@@ -218,7 +218,7 @@ export function BajasPanel({ bajas, dark = false }: BajasPanelProps) {
         ))}
       </div>
 
-      <div className={hrKpiGrid('max-w-2xl')}>
+      <div className={hrKpiGrid('max-w-xl sm:grid-cols-2')}>
         <MetricTile
           dark={dark}
           accent
@@ -226,12 +226,6 @@ export function BajasPanel({ bajas, dark = false }: BajasPanelProps) {
           label={mesFiltro === TODOS ? 'Total bajas' : `Bajas ${mesLabel}`}
         />
         <MetricTile dark={dark} value={String(motivos.length)} label="Motivos" />
-        <MetricTile
-          dark={dark}
-          value={String(porMes.length)}
-          label="Meses"
-          className="hidden sm:block"
-        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">

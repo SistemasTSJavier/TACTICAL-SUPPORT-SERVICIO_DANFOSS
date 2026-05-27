@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Maximize, X } from 'lucide-react'
 import { useEvaluacion } from '@/context/EvaluacionProvider'
@@ -6,41 +6,20 @@ import { Logo } from '@/components/brand/Logo'
 import { CompromisosPanel } from '@/components/hr/CompromisosPanel'
 import { BajasPanel } from '@/components/hr/BajasPanel'
 import { AusentismosPanel } from '@/components/hr/AusentismosPanel'
-import { KpiCards } from '@/components/kpi/KpiCards'
-import { NomenclaturaChips } from '@/components/legend/NomenclaturaChips'
-import { DistribucionDona } from '@/components/charts/DistribucionDona'
-import { Evaluacion360Detalle } from '@/components/charts/Evaluacion360Detalle'
-import { PromedioGauge } from '@/components/charts/PromedioGauge'
-import { OficialChips } from '@/components/interactive/OficialChips'
-import { getEvaluados, rankingOficiales } from '@/lib/stats'
+import { TablaEvaluacion } from '@/components/table/TablaEvaluacion'
+import { Evaluacion360Overview } from '@/components/evaluacion/Evaluacion360Overview'
 import { buttonVariants } from '@/components/ui/button'
 import { presentationSlideContent } from '@/lib/dashboardStyles'
 import { cn } from '@/lib/utils'
 
-/** Portada → Compromisos → Bajas → Ausentismos → 360 (4 diapositivas) */
-const SLIDE_COUNT = 7
+/** Portada → Compromisos → Bajas → Ausentismos → Matriz → Resumen 360 */
+const SLIDE_COUNT = 6
 
 export function PresentationMode() {
   const { data: evaluacionData, sourceLabel, reloadFromFile, reloadFromServer, loading } =
     useEvaluacion()
   const { meta, oficiales, evaluadoresLabels, rrhh } = evaluacionData
   const [slide, setSlide] = useState(0)
-
-  const evaluados = useMemo(() => getEvaluados(oficiales), [oficiales])
-  const [selectedId, setSelectedId] = useState<string | undefined>(
-    () => rankingOficiales(oficiales)[0]?.id,
-  )
-
-  const selectedOficial = useMemo(
-    () => evaluados.find((o) => o.id === selectedId) ?? evaluados[0] ?? null,
-    [evaluados, selectedId],
-  )
-
-  useEffect(() => {
-    if (selectedId && !evaluados.some((o) => o.id === selectedId) && evaluados[0]) {
-      setSelectedId(evaluados[0].id)
-    }
-  }, [evaluados, selectedId])
 
   const next = useCallback(() => {
     setSlide((s) => Math.min(SLIDE_COUNT - 1, s + 1))
@@ -148,34 +127,22 @@ export function PresentationMode() {
         )}
 
         {slide === 4 && (
-          <div className={presentationSlideContent('gap-6')}>
-            <div className="grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]">
-              <KpiCards oficiales={oficiales} dark large />
-              <PromedioGauge oficiales={oficiales} dark />
-            </div>
-            <NomenclaturaChips dark />
+          <div className={presentationSlideContent('overflow-y-auto')}>
+            <TablaEvaluacion
+              oficiales={oficiales}
+              evaluadoresLabels={evaluadoresLabels}
+              dark
+            />
           </div>
         )}
 
         {slide === 5 && (
-          <div className={presentationSlideContent()}>
-            <DistribucionDona oficiales={oficiales} height={460} dark />
-          </div>
-        )}
-
-        {slide === 6 && (
-          <div className={presentationSlideContent('gap-5 overflow-y-auto')}>
-            <OficialChips
-              oficiales={evaluados}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              dark
-            />
-            <Evaluacion360Detalle
-              oficial={selectedOficial}
+          <div className={presentationSlideContent('overflow-y-auto')}>
+            <Evaluacion360Overview
               oficiales={oficiales}
-              evaluadoresLabels={evaluadoresLabels}
               dark
+              large
+              donutHeight={340}
             />
           </div>
         )}

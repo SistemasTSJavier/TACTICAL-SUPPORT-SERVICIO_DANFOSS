@@ -19,11 +19,6 @@ type Evaluacion360DetalleProps = {
   dark?: boolean
 }
 
-function shortLabel(full: string) {
-  const p = full.split(' ')
-  return p.length >= 2 ? `${p[0]} ${p[1]}` : full
-}
-
 export function Evaluacion360Detalle({
   oficial,
   oficiales,
@@ -103,7 +98,15 @@ export function Evaluacion360Detalle({
           >
             <p
               className={cn(
-                'text-sm font-medium sm:text-base',
+                'text-sm font-bold uppercase leading-snug whitespace-normal break-words sm:text-base',
+                dark ? 'text-white' : 'text-black',
+              )}
+            >
+              {oficial.nombre}
+            </p>
+            <p
+              className={cn(
+                'mt-2 text-sm font-medium sm:text-base',
                 dark ? 'text-white/80' : 'text-black/55',
               )}
             >
@@ -158,11 +161,11 @@ export function Evaluacion360Detalle({
                     <div className="min-w-0 flex-1">
                       <p
                         className={cn(
-                          'text-base font-bold leading-snug sm:text-lg',
+                          'text-sm font-bold uppercase leading-snug whitespace-normal break-words sm:text-base',
                           dark ? 'text-white' : 'text-black',
                         )}
                       >
-                        {shortLabel(f.label)}
+                        {f.label}
                       </p>
                       <p
                         className={cn(
@@ -177,14 +180,24 @@ export function Evaluacion360Detalle({
                       </p>
                     </div>
                     <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-                      <span
-                        className={cn(
-                          'text-2xl font-bold tabular-nums sm:text-3xl',
-                          dark ? 'text-white' : 'text-black',
-                        )}
-                      >
-                        {f.valor.toFixed(2)}
-                      </span>
+                      <div className="text-right">
+                        <span
+                          className={cn(
+                            'text-2xl font-bold tabular-nums sm:text-3xl',
+                            dark ? 'text-white' : 'text-black',
+                          )}
+                        >
+                          {f.valor.toFixed(2)}
+                        </span>
+                        <span
+                          className={cn(
+                            'ml-2 text-base font-semibold tabular-nums sm:text-lg',
+                            dark ? 'text-white/75' : 'text-black/55',
+                          )}
+                        >
+                          ({pct.toFixed(1)}%)
+                        </span>
+                      </div>
                       <NivelTag score={f.valor} dark={dark} />
                     </div>
                   </div>

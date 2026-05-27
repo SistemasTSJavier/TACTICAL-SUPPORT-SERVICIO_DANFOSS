@@ -97,3 +97,53 @@ export function promedioEvaluadoresOficial(oficial: EvaluacionOficial) {
   if (scores.length === 0) return 0
   return scores.reduce((a, b) => a + b, 0) / scores.length
 }
+
+/** Desempeño final del Excel (columna DESEMPEÑO) como % sobre escala 5 */
+export function porcentajeDesempeno(oficial: EvaluacionOficial): number | null {
+  if (oficial.sinEvaluar || oficial.desempeno <= 0) return null
+  return Math.round((oficial.desempeno / 5) * 1000) / 10
+}
+
+/** Promedio de calificaciones recibidas (evaluadores + TS) como % sobre escala 5 */
+export function porcentajePromedioCalificaciones(
+  oficial: EvaluacionOficial,
+): number | null {
+  const scores = [
+    ...EVALUADOR_KEYS.map((k) => oficial.evaluadores[k]),
+    oficial.ts,
+  ].filter((s): s is number => s !== null && s > 0)
+
+  if (oficial.sinEvaluar || scores.length === 0) return null
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+  return Math.round((avg / 5) * 1000) / 10
+}
+
+/** Promedio de calificaciones otorgadas por un evaluador (fila de matriz) como % */
+export function porcentajePromedioEvaluador(
+  oficiales: EvaluacionOficial[],
+  key: EvaluadorKey,
+): number | null {
+  const scores = oficiales
+    .filter((o) => !o.sinEvaluar)
+    .map((o) => o.evaluadores[key])
+    .filter((s): s is number => s !== null && s > 0)
+
+  if (scores.length === 0) return null
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+  return Math.round((avg / 5) * 1000) / 10
+}
+
+export function porcentajePromedioTs(
+  oficiales: EvaluacionOficial[],
+): number | null {
+  const scores = oficiales
+    .filter((o) => !o.sinEvaluar && o.ts !== null && o.ts > 0)
+    .map((o) => o.ts as number)
+
+  if (scores.length === 0) return null
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+  return Math.round((avg / 5) * 1000) / 10
+}

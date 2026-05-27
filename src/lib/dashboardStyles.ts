@@ -19,14 +19,41 @@ export function hrPanelInner(dark: boolean) {
 
 export function hrFilterPill(active: boolean, dark: boolean) {
   return cn(
-    'rounded-full px-4 py-2 text-xs font-semibold tracking-wide transition-all duration-200 sm:text-sm',
+    'hr-filter-pill shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold tracking-wide transition-all duration-200 sm:px-4 sm:text-sm',
     active
       ? dark
-        ? 'bg-white text-[#000b29] shadow-md ring-2 ring-white/25'
-        : 'bg-navy text-white shadow-sm'
+        ? 'hr-filter-pill-active border-sky-300/80 bg-sky-300 text-[#000b29] shadow-md ring-2 ring-sky-200/40'
+        : 'border-navy bg-navy text-white shadow-sm'
       : dark
-        ? 'border border-white/20 bg-white/[0.08] text-white/90 hover:border-white/35 hover:bg-white/12'
+        ? 'border border-white/30 bg-white/10 text-white hover:border-white/45 hover:bg-white/15'
         : 'border border-navy/12 bg-white text-navy hover:border-navy/25 hover:bg-navy/[0.03]',
+  )
+}
+
+export function hrFilterToggleGroup(dark: boolean) {
+  return cn(
+    'inline-flex shrink-0 rounded-full border p-1',
+    dark ? 'border-white/25 bg-[#00051a]' : 'border-navy/12 bg-slate-100',
+  )
+}
+
+export function hrFilterToggleOption(active: boolean, dark: boolean) {
+  return cn(
+    'rounded-full px-4 py-2 text-xs font-semibold transition-colors sm:text-sm',
+    active
+      ? dark
+        ? 'bg-sky-300 text-[#000b29] shadow-sm'
+        : 'bg-navy text-white'
+      : dark
+        ? 'text-white/75 hover:bg-white/10 hover:text-white'
+        : 'text-navy/65 hover:bg-navy/5 hover:text-navy',
+  )
+}
+
+export function hrFilterScrollRow(className?: string) {
+  return cn(
+    'scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0',
+    className,
   )
 }
 
@@ -44,7 +71,7 @@ export function hrSelect(dark: boolean, className?: string) {
 export function hrLabel(dark: boolean) {
   return cn(
     'text-xs font-bold uppercase tracking-widest',
-    dark ? 'text-white/50' : 'text-black/45',
+    dark ? 'text-white/70' : 'text-black/45',
   )
 }
 

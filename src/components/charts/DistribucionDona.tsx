@@ -5,17 +5,21 @@ import { ChartPanel } from '@/components/layout/ChartPanel'
 import { colorPorNivelLabel } from '@/lib/colors'
 import { distribucionPorNivel } from '@/lib/stats'
 import type { EvaluacionOficial } from '@/types/evaluacion'
+import { cn } from '@/lib/utils'
 
 type DistribucionDonaProps = {
   oficiales: EvaluacionOficial[]
   height?: number
   dark?: boolean
+  /** Sin panel exterior (dentro de Evaluacion360Overview) */
+  embedded?: boolean
 }
 
 export function DistribucionDona({
   oficiales,
   height = 360,
   dark = false,
+  embedded = false,
 }: DistribucionDonaProps) {
   const data = useMemo(() => distribucionPorNivel(oficiales), [oficiales])
 
@@ -57,6 +61,19 @@ export function DistribucionDona({
     }),
     [data, dark],
   )
+
+  if (embedded) {
+    return (
+      <div
+        className={cn(
+          'rounded-xl border p-2 sm:p-4',
+          dark ? 'border-white/10 bg-white/[0.04]' : 'border-navy/8 bg-surface',
+        )}
+      >
+        <ReactECharts option={option} style={{ height, width: '100%' }} notMerge />
+      </div>
+    )
+  }
 
   return (
     <ChartPanel

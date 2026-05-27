@@ -57,6 +57,27 @@ body {
   color: rgb(255 255 255 / 0.75);
 }
 
+/* Pastillas activas: texto oscuro legible (evita blanco sobre blanco) */
+.presentation-dark .hr-filter-pill-active,
+.presentation-dark .hr-filter-pill-active * {
+  color: #000b29 !important;
+}
+
+.presentation-dark button.hr-filter-pill:not(.hr-filter-pill-active) {
+  color: rgb(255 255 255 / 0.92);
+}
+
+/* Matriz: celdas de datos legibles; desempeño conserva color semáforo inline */
+.presentation-dark .eval-matrix .eval-matrix-cell {
+  color: #000b29 !important;
+}
+.presentation-dark .eval-matrix .eval-matrix-head {
+  color: #ffffff !important;
+}
+.presentation-dark .eval-matrix .eval-matrix-row-head {
+  color: #ffffff !important;
+}
+
 .chart-card-title {
   letter-spacing: -0.02em;
 }

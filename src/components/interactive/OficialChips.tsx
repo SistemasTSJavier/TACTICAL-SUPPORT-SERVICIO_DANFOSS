@@ -59,7 +59,6 @@ export function OficialChips({
       <div className="chips-scroll flex gap-2.5 overflow-x-auto pb-2">
         {oficiales.map((o) => {
           const dotColor = o.sinEvaluar ? undefined : colorPorScore(o.desempeno)
-          const apellido = o.nombre.split(' ').slice(0, 2).join(' ')
           const active = o.id === selectedId
 
           return (
@@ -68,7 +67,7 @@ export function OficialChips({
               type="button"
               onClick={() => onSelect(o.id)}
               className={cn(
-                'flex min-h-[4rem] min-w-[9rem] shrink-0 flex-col justify-center rounded-xl border px-4 py-3 text-left transition-all',
+                'flex min-h-[4.5rem] min-w-[11rem] max-w-[18rem] shrink-0 flex-col justify-center rounded-xl border px-4 py-3 text-left transition-all sm:min-w-[12rem]',
                 active
                   ? 'border-white bg-white/20 text-white ring-2 ring-white/40'
                   : dark
@@ -76,15 +75,15 @@ export function OficialChips({
                     : 'border-navy/12 bg-white text-black hover:border-navy/30',
               )}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-start gap-2">
                 {dotColor && (
                   <span
-                    className="h-3 w-3 rounded-full"
+                    className="mt-1 h-3 w-3 shrink-0 rounded-full"
                     style={{ backgroundColor: dotColor }}
                   />
                 )}
-                <span className="truncate text-sm font-bold sm:text-base">
-                  {apellido}
+                <span className="text-xs font-bold uppercase leading-snug whitespace-normal break-words sm:text-sm">
+                  {o.nombre}
                 </span>
               </span>
               <span
