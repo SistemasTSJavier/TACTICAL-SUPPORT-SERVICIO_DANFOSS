@@ -6,6 +6,7 @@ export type CompromisoSemana = {
   puesto: string
   fecha: string
   fechaLabel: string
+  mes: string
   contrataciones: number
   cumplimiento: number
   comentarios: string
@@ -13,6 +14,23 @@ export type CompromisoSemana = {
   bajasNombres: string[]
   altas: number
   bajas: number
+}
+
+/** Semana o mes agregado para gráfica y KPIs */
+export type CompromisoPeriodo = {
+  id: string
+  label: string
+  tipo: 'semana' | 'mes'
+  plantilla: number
+  vacantes: number
+  puesto: string
+  contrataciones: number
+  cumplimiento: number
+  altas: number
+  bajas: number
+  altasNombres: string[]
+  bajasNombres: string[]
+  semanas: CompromisoSemana[]
 }
 
 export type BajaRegistro = {

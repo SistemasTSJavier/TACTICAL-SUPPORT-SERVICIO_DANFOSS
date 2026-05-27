@@ -1,9 +1,175 @@
 import type {
   AusentismoRegistro,
   BajaRegistro,
+  CompromisoPeriodo,
   CompromisoSemana,
 } from '@/types/rrhh'
 import { monthKeyToLabel } from '@/lib/excelDate'
+
+const TODOS_MESES = 'todos'
+
+/** Cumplimiento: cobertura de vacantes con altas (periodo semana o mes). */
+export function calcularCumplimientoCompromiso(
+  vacantes: number,
+  altas: number,
+  bajas: number,
+  excelCumplimiento?: number,
+): number {
+  if (vacantes > 0) {
+    return Math.min(100, Math.round((altas / vacantes) * 1000) / 10)
+  }
+  if (excelCumplimiento != null && excelCumplimiento > 0) {
+    return Math.round(excelCumplimiento * 10) / 10
+  }
+  const movimiento = altas + bajas
+  if (movimiento === 0) return 100
+  return Math.min(100, Math.round((altas / movimiento) * 1000) / 10)
+}
+
+function mergeNombres(listas: string[][]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const lista of listas) {
+    for (const nombre of lista) {
+      const key = nombre.trim().toUpperCase()
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      out.push(nombre.trim())
+    }
+  }
+  return out
+}
+
+function semanaToPeriodo(s: CompromisoSemana): CompromisoPeriodo {
+  const altas = s.altasNombres.length || s.altas
+  const bajas = s.bajasNombres.length || s.bajas
+  return {
+    id: s.id,
+    label: s.fechaLabel,
+    tipo: 'semana',
+    plantilla: s.plantilla,
+    vacantes: s.vacantes,
+    puesto: s.puesto,
+    contrataciones: s.contrataciones,
+    cumplimiento: calcularCumplimientoCompromiso(
+      s.vacantes,
+      altas,
+      bajas,
+      s.cumplimiento,
+    ),
+    altas,
+    bajas,
+    altasNombres: s.altasNombres,
+    bajasNombres: s.bajasNombres,
+    semanas: [s],
+  }
+}
+
+export function compromisosPorMes(
+  compromisos: CompromisoSemana[],
+): CompromisoPeriodo[] {
+  const ordenados = tendenciaCompromisos(compromisos)
+  const porMes = new Map<string, CompromisoSemana[]>()
+
+  for (const s of ordenados) {
+    const mes = s.mes || 'sin-fecha'
+    const list = porMes.get(mes) ?? []
+    list.push(s)
+    porMes.set(mes, list)
+  }
+
+  return [...porMes.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([mes, semanas]) => {
+      const ultima = semanas[semanas.length - 1]
+      const altasNombres = mergeNombres(semanas.map((x) => x.altasNombres))
+      const bajasNombres = mergeNombres(semanas.map((x) => x.bajasNombres))
+      const altas =
+        altasNombres.length ||
+        semanas.reduce((sum, x) => sum + (x.altasNombres.length || x.altas), 0)
+      const bajas =
+        bajasNombres.length ||
+        semanas.reduce((sum, x) => sum + (x.bajasNombres.length || x.bajas), 0)
+      const vacantes = semanas.reduce((sum, x) => sum + x.vacantes, 0)
+      const contrataciones = semanas.reduce((sum, x) => sum + x.contrataciones, 0)
+      const promedioExcel =
+        semanas.reduce((sum, x) => sum + x.cumplimiento, 0) / semanas.length
+
+      return {
+        id: mes,
+        label: monthKeyToLabel(mes),
+        tipo: 'mes' as const,
+        plantilla: ultima.plantilla,
+        vacantes,
+        puesto: semanas.find((x) => x.puesto)?.puesto ?? '',
+        contrataciones,
+        cumplimiento: calcularCumplimientoCompromiso(
+          vacantes,
+          altas,
+          bajas,
+          promedioExcel,
+        ),
+        altas,
+        bajas,
+        altasNombres,
+        bajasNombres,
+        semanas,
+      }
+    })
+}
+
+export function mesesCompromisos(compromisos: CompromisoSemana[]) {
+  const meses = [...new Set(compromisos.map((s) => s.mes).filter(Boolean))].sort()
+  return meses
+}
+
+export function filtrarCompromisosPorMes(
+  compromisos: CompromisoSemana[],
+  mes: string,
+) {
+  if (mes === TODOS_MESES) return tendenciaCompromisos(compromisos)
+  return tendenciaCompromisos(compromisos).filter((s) => s.mes === mes)
+}
+
+export function periodosDesdeSemanas(
+  semanas: CompromisoSemana[],
+): CompromisoPeriodo[] {
+  return semanas.map(semanaToPeriodo)
+}
+
+export function resumenGeneralCompromisos(
+  compromisos: CompromisoSemana[],
+): CompromisoPeriodo {
+  const semanas = tendenciaCompromisos(compromisos)
+  const ultima = semanas[semanas.length - 1]
+  const altasNombres = mergeNombres(semanas.map((x) => x.altasNombres))
+  const bajasNombres = mergeNombres(semanas.map((x) => x.bajasNombres))
+  const altas =
+    altasNombres.length ||
+    semanas.reduce((sum, x) => sum + (x.altasNombres.length || x.altas), 0)
+  const bajas =
+    bajasNombres.length ||
+    semanas.reduce((sum, x) => sum + (x.bajasNombres.length || x.bajas), 0)
+  const vacantes = semanas.reduce((sum, x) => sum + x.vacantes, 0)
+
+  return {
+    id: 'general',
+    label: 'General',
+    tipo: 'mes',
+    plantilla: ultima?.plantilla ?? 0,
+    vacantes,
+    puesto: '',
+    contrataciones: semanas.reduce((sum, x) => sum + x.contrataciones, 0),
+    cumplimiento: calcularCumplimientoCompromiso(vacantes, altas, bajas),
+    altas,
+    bajas,
+    altasNombres,
+    bajasNombres,
+    semanas,
+  }
+}
+
+export { TODOS_MESES }
 
 export function bajasPorMes(bajas: BajaRegistro[]) {
   const map = new Map<string, number>()

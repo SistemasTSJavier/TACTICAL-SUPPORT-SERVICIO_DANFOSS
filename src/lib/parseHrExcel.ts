@@ -110,6 +110,7 @@ function parseCompromisos(rows: unknown[][]): CompromisoSemana[] {
         puesto: puestoRaw && puestoRaw.toUpperCase() !== 'N/A' ? puestoRaw : '',
         fecha: String(fechaRaw),
         fechaLabel,
+        mes: mesDesdeFechaRaw(fechaRaw),
         contrataciones: toNumber(row[cContrat >= 0 ? cContrat : 5]),
         cumplimiento,
         comentarios,

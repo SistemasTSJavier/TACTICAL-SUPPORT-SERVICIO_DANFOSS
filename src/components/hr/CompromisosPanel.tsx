@@ -1,14 +1,23 @@
 import ReactECharts from 'echarts-for-react'
-import { useMemo, useState } from 'react'
-import type { CompromisoSemana } from '@/types/rrhh'
+import { useEffect, useMemo, useState } from 'react'
+import type { CompromisoPeriodo, CompromisoSemana } from '@/types/rrhh'
 import { MetricTile } from '@/components/hr/MetricTile'
-import { fechaLabelCorta } from '@/lib/excelDate'
-import { nombreCorto, tendenciaCompromisos } from '@/lib/statsRrhh'
+import { fechaLabelCorta, monthKeyToLabel } from '@/lib/excelDate'
+import {
+  compromisosPorMes,
+  filtrarCompromisosPorMes,
+  mesesCompromisos,
+  nombreCorto,
+  periodosDesdeSemanas,
+  resumenGeneralCompromisos,
+  TODOS_MESES,
+} from '@/lib/statsRrhh'
 import {
   hrFieldLabel,
   hrFieldValue,
   hrFilterPill,
   hrKpiGrid,
+  hrLabel,
   hrPanel,
   hrScrollArea,
   HR_PANEL_HEIGHT,
@@ -19,6 +28,8 @@ type CompromisosPanelProps = {
   compromisos: CompromisoSemana[]
   dark?: boolean
 }
+
+type VistaPeriodo = 'semana' | 'mes'
 
 function ListaMovimiento({
   titulo,
@@ -80,13 +91,15 @@ function ListaMovimiento({
   )
 }
 
-function SemanaMovimiento({
-  semana,
+function PeriodoMovimiento({
+  periodo,
   dark,
 }: {
-  semana: CompromisoSemana
+  periodo: CompromisoPeriodo
   dark: boolean
 }) {
+  const esMes = periodo.tipo === 'mes'
+
   return (
     <div className={cn('flex h-full flex-col', hrScrollArea(dark))}>
       <p
@@ -95,10 +108,15 @@ function SemanaMovimiento({
           dark ? 'text-white/65' : 'text-black/50',
         )}
       >
-        {semana.fechaLabel}
+        {periodo.label}
+        {esMes && periodo.semanas.length > 1 && (
+          <span className="ml-2 font-normal normal-case text-white/50">
+            ({periodo.semanas.length} semanas)
+          </span>
+        )}
       </p>
 
-      {semana.vacantes > 0 && (
+      {periodo.vacantes > 0 && periodo.puesto && (
         <div
           className={cn(
             'mb-3 shrink-0 rounded-xl border px-4 py-3',
@@ -108,22 +126,66 @@ function SemanaMovimiento({
           )}
         >
           <p className={hrFieldLabel(dark)}>Puesto vacante</p>
-          <p className={cn(hrFieldValue(dark), 'font-semibold')}>
-            {semana.puesto || 'Por definir'}
-          </p>
+          <p className={cn(hrFieldValue(dark), 'font-semibold')}>{periodo.puesto}</p>
         </div>
       )}
+
+      <div className="mb-3 grid shrink-0 grid-cols-3 gap-2 text-center">
+        <div
+          className={cn(
+            'rounded-lg border px-2 py-2',
+            dark ? 'border-white/15 bg-white/5' : 'border-navy/10 bg-surface',
+          )}
+        >
+          <p className={hrFieldLabel(dark)}>Vacantes</p>
+          <p className={cn('text-lg font-bold tabular-nums', dark ? 'text-white' : 'text-navy')}>
+            {periodo.vacantes}
+          </p>
+        </div>
+        <div
+          className={cn(
+            'rounded-lg border px-2 py-2',
+            dark ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-emerald-200 bg-emerald-50',
+          )}
+        >
+          <p className={hrFieldLabel(dark)}>Altas</p>
+          <p
+            className={cn(
+              'text-lg font-bold tabular-nums',
+              dark ? 'text-emerald-200' : 'text-emerald-800',
+            )}
+          >
+            {periodo.altas}
+          </p>
+        </div>
+        <div
+          className={cn(
+            'rounded-lg border px-2 py-2',
+            dark ? 'border-red-500/25 bg-red-500/10' : 'border-red-200 bg-red-50',
+          )}
+        >
+          <p className={hrFieldLabel(dark)}>Bajas</p>
+          <p
+            className={cn(
+              'text-lg font-bold tabular-nums',
+              dark ? 'text-red-200' : 'text-red-800',
+            )}
+          >
+            {periodo.bajas}
+          </p>
+        </div>
+      </div>
 
       <div className="grid min-h-0 flex-1 gap-3 sm:grid-cols-2">
         <ListaMovimiento
           titulo="Altas"
-          nombres={semana.altasNombres}
+          nombres={periodo.altasNombres}
           variant="alta"
           dark={dark}
         />
         <ListaMovimiento
           titulo="Bajas"
-          nombres={semana.bajasNombres}
+          nombres={periodo.bajasNombres}
           variant="baja"
           dark={dark}
         />
@@ -132,136 +194,131 @@ function SemanaMovimiento({
   )
 }
 
+function pillGroup(dark: boolean) {
+  return cn(
+    'inline-flex rounded-full border p-1',
+    dark ? 'border-white/20 bg-white/5' : 'border-navy/12 bg-white',
+  )
+}
+
 export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanelProps) {
-  const ordenados = useMemo(() => tendenciaCompromisos(compromisos), [compromisos])
-  const [semanaId, setSemanaId] = useState<string>(
-    () => ordenados[ordenados.length - 1]?.id ?? '',
+  const [vista, setVista] = useState<VistaPeriodo>('semana')
+  const [mesFiltro, setMesFiltro] = useState(TODOS_MESES)
+  const [periodoId, setPeriodoId] = useState('')
+
+  const meses = useMemo(() => mesesCompromisos(compromisos), [compromisos])
+  const porMes = useMemo(() => compromisosPorMes(compromisos), [compromisos])
+  const general = useMemo(() => resumenGeneralCompromisos(compromisos), [compromisos])
+
+  const semanasFiltradas = useMemo(
+    () => filtrarCompromisosPorMes(compromisos, mesFiltro),
+    [compromisos, mesFiltro],
   )
 
-  const semana =
-    ordenados.find((s) => s.id === semanaId) ?? ordenados[ordenados.length - 1]
+  const periodosGrafica = useMemo(() => {
+    if (vista === 'mes') return porMes
+    return periodosDesdeSemanas(semanasFiltradas)
+  }, [vista, porMes, semanasFiltradas])
 
-  const selectedIndex = ordenados.findIndex((s) => s.id === semana?.id)
+  const periodo =
+    periodoId === 'general'
+      ? general
+      : (periodosGrafica.find((p) => p.id === periodoId) ??
+        periodosGrafica[periodosGrafica.length - 1] ??
+        general)
+
+  const selectedIndex = periodosGrafica.findIndex((p) => p.id === periodo?.id)
+
+  useEffect(() => {
+    if (vista === 'mes') {
+      const ultimo = porMes[porMes.length - 1]
+      setPeriodoId(ultimo?.id ?? 'general')
+      return
+    }
+    const ultima = semanasFiltradas[semanasFiltradas.length - 1]
+    setPeriodoId(ultima?.id ?? 'general')
+  }, [vista, mesFiltro, porMes, semanasFiltradas])
+
+  const chartLabels = useMemo(() => {
+    if (vista === 'mes') return periodosGrafica.map((p) => p.label)
+    return periodosGrafica.map((p) => fechaLabelCorta(p.label))
+  }, [vista, periodosGrafica])
 
   const trendOption = useMemo(() => {
-    const labels = ordenados.map((s) => fechaLabelCorta(s.fechaLabel))
-    const vacantes = ordenados.map((s) => s.vacantes)
-    const cumplimiento = ordenados.map((s) =>
-      Math.round(s.cumplimiento * 10) / 10,
+    const vacantes = periodosGrafica.map((p) => p.vacantes)
+    const altas = periodosGrafica.map((p) => p.altas)
+    const bajas = periodosGrafica.map((p) => p.bajas)
+    const cumplimiento = periodosGrafica.map((p) =>
+      Math.round(p.cumplimiento * 10) / 10,
     )
     const minCumpl = Math.min(...cumplimiento, 90)
-    const cumplMin = Math.max(88, Math.floor(minCumpl) - 2)
-    const vacMax = Math.max(4, ...vacantes) + 1
-    const manyWeeks = labels.length > 5
+    const cumplMin = Math.max(0, Math.floor(minCumpl) - 5)
+    const countMax = Math.max(4, ...vacantes, ...altas, ...bajas) + 1
+    const manyLabels = chartLabels.length > 5
 
-    const barColors = ordenados.map((_, i) =>
-      i === selectedIndex
-        ? dark
-          ? '#38bdf8'
-          : '#000b29'
-        : dark
-          ? 'rgba(56,189,248,0.55)'
-          : 'rgba(0,11,41,0.45)',
-    )
+    const barColor = (i: number, active: string, idle: string) =>
+      i === selectedIndex ? active : idle
 
     const textMuted = dark ? '#ffffffb3' : '#555'
     const textBright = dark ? '#ffffff' : '#000b29'
 
     return {
       animationDuration: 600,
-      animationEasing: 'cubicOut',
       tooltip: {
         trigger: 'axis',
         backgroundColor: dark ? 'rgba(0,11,41,0.96)' : '#fff',
-        borderColor: dark ? 'rgba(255,255,255,0.25)' : '#000b2920',
         padding: [10, 14],
-        textStyle: { color: dark ? '#fff' : '#000', fontSize: 14 },
-        axisPointer: {
-          type: 'shadow',
-          shadowStyle: { color: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
-        },
+        textStyle: { color: dark ? '#fff' : '#000', fontSize: 13 },
         formatter: (params: { seriesName: string; value: number; axisValue: string }[]) => {
-          const fecha = params[0]?.axisValue ?? ''
-          const vac = params.find((p) => p.seriesName === 'Vacantes')
-          const cum = params.find((p) => p.seriesName === 'Cumplimiento')
-          return [
-            `<b style="font-size:14px">${fecha}</b>`,
-            vac ? `<span style="color:#38bdf8">●</span> Vacantes: <b>${vac.value}</b>` : '',
-            cum
-              ? `<span style="color:#4ade80">●</span> Cumplimiento: <b>${cum.value}%</b>`
-              : '',
-          ]
-            .filter(Boolean)
-            .join('<br/>')
+          const titulo = params[0]?.axisValue ?? ''
+          const lines = [`<b>${titulo}</b>`]
+          for (const p of params) {
+            if (p.seriesName === 'Cumplimiento') {
+              lines.push(`Cumplimiento: <b>${p.value}%</b>`)
+            } else {
+              lines.push(`${p.seriesName}: <b>${p.value}</b>`)
+            }
+          }
+          return lines.join('<br/>')
         },
       },
-      grid: { left: 56, right: 60, top: 64, bottom: manyWeeks ? 56 : 48, containLabel: false },
+      grid: { left: 52, right: 56, top: 72, bottom: manyLabels ? 56 : 48 },
       legend: {
         top: 8,
         left: 'center',
-        itemGap: 28,
-        itemWidth: 14,
-        itemHeight: 10,
-        textStyle: {
-          color: dark ? '#ffffffe6' : '#333',
-          fontSize: 13,
-          fontWeight: 600,
-        },
+        itemGap: 16,
+        textStyle: { color: dark ? '#ffffffe6' : '#333', fontSize: 12 },
       },
       xAxis: {
         type: 'category',
-        data: labels,
-        axisLine: { lineStyle: { color: dark ? '#ffffff30' : '#000b2925' } },
+        data: chartLabels,
         axisTick: { show: false },
         axisLabel: {
           color: textBright,
-          fontSize: manyWeeks ? 11 : 13,
+          fontSize: manyLabels ? 11 : 12,
           fontWeight: 600,
-          margin: 14,
           interval: 0,
-          rotate: manyWeeks ? 28 : 0,
+          rotate: manyLabels ? 28 : 0,
         },
       },
       yAxis: [
         {
           type: 'value',
-          name: 'Vacantes',
-          nameGap: 12,
-          nameTextStyle: {
-            color: textMuted,
-            fontSize: 12,
-            fontWeight: 600,
-          },
+          name: 'Cantidad',
           min: 0,
-          max: vacMax,
+          max: countMax,
           minInterval: 1,
-          axisLabel: {
-            color: textMuted,
-            fontSize: 12,
-            fontWeight: 500,
-          },
+          axisLabel: { color: textMuted, fontSize: 11 },
           splitLine: {
-            lineStyle: { color: dark ? '#ffffff18' : '#000b2912', type: 'dashed' },
+            lineStyle: { color: dark ? '#ffffff15' : '#000b2910', type: 'dashed' },
           },
         },
         {
           type: 'value',
-          name: 'Cumplimiento',
-          nameGap: 14,
-          nameTextStyle: {
-            color: textMuted,
-            fontSize: 12,
-            fontWeight: 600,
-          },
+          name: '%',
           min: cumplMin,
           max: 100,
-          interval: 4,
-          axisLabel: {
-            formatter: '{value}%',
-            color: textMuted,
-            fontSize: 12,
-            fontWeight: 500,
-          },
+          axisLabel: { formatter: '{value}%', color: textMuted, fontSize: 11 },
           splitLine: { show: false },
         },
       ],
@@ -269,90 +326,98 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
         {
           name: 'Vacantes',
           type: 'bar',
-          barWidth: '46%',
-          z: 1,
+          barGap: '20%',
           data: vacantes.map((v, i) => ({
             value: v,
             itemStyle: {
-              color: barColors[i],
-              borderRadius: [8, 8, 0, 0],
+              color: barColor(
+                i,
+                dark ? '#38bdf8' : '#000b29',
+                dark ? 'rgba(56,189,248,0.55)' : 'rgba(0,11,41,0.45)',
+              ),
+              borderRadius: [4, 4, 0, 0],
             },
           })),
           label: {
             show: true,
-            position: 'insideTop',
-            distance: 8,
-            fontSize: 13,
+            position: 'top',
+            fontSize: 11,
             fontWeight: 'bold',
-            color: '#ffffff',
-            textShadowColor: 'rgba(0,0,0,0.5)',
-            textShadowBlur: 4,
+            color: textBright,
+          },
+        },
+        {
+          name: 'Altas',
+          type: 'bar',
+          data: altas.map((v, i) => ({
+            value: v,
+            itemStyle: {
+              color: barColor(i, '#22c55e', 'rgba(34,197,94,0.55)'),
+              borderRadius: [4, 4, 0, 0],
+            },
+          })),
+          label: {
+            show: true,
+            position: 'top',
+            fontSize: 10,
+            color: '#22c55e',
+            formatter: (p: { value: number }) => (p.value > 0 ? String(p.value) : ''),
+          },
+        },
+        {
+          name: 'Bajas',
+          type: 'bar',
+          data: bajas.map((v, i) => ({
+            value: v,
+            itemStyle: {
+              color: barColor(i, '#ef4444', 'rgba(239,68,68,0.55)'),
+              borderRadius: [4, 4, 0, 0],
+            },
+          })),
+          label: {
+            show: true,
+            position: 'top',
+            fontSize: 10,
+            color: '#ef4444',
+            formatter: (p: { value: number }) => (p.value > 0 ? String(p.value) : ''),
           },
         },
         {
           name: 'Cumplimiento',
           type: 'line',
           yAxisIndex: 1,
-          z: 3,
           smooth: 0.3,
-          symbol: 'circle',
           symbolSize: (_: number, params: { dataIndex: number }) =>
-            params.dataIndex === selectedIndex ? 14 : 10,
+            params.dataIndex === selectedIndex ? 12 : 8,
           data: cumplimiento.map((v, i) => ({
             value: v,
             label: {
               show: true,
               position: i % 2 === 0 ? 'top' : 'bottom',
-              distance: i % 2 === 0 ? 12 : 10,
               formatter: `${v}%`,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 'bold',
               color: '#4ade80',
-              backgroundColor: dark ? 'rgba(0,11,41,0.9)' : 'rgba(255,255,255,0.95)',
-              borderColor: dark ? 'rgba(74,222,128,0.45)' : 'rgba(34,197,94,0.35)',
-              borderWidth: 1,
-              borderRadius: 6,
-              padding: [3, 7],
+              backgroundColor: dark ? 'rgba(0,11,41,0.9)' : '#fff',
+              padding: [2, 6],
+              borderRadius: 4,
             },
           })),
-          itemStyle: {
-            color: '#4ade80',
-            borderColor: dark ? '#000b29' : '#fff',
-            borderWidth: 3,
-          },
           lineStyle: { color: '#4ade80', width: 3 },
-          areaStyle: {
-            color: {
-              type: 'linear',
-              x: 0,
-              y: 0,
-              x2: 0,
-              y2: 1,
-              colorStops: [
-                { offset: 0, color: 'rgba(74,222,128,0.28)' },
-                { offset: 1, color: 'rgba(74,222,128,0.02)' },
-              ],
-            },
-          },
-          labelLayout: {
-            moveOverlap: 'shiftY',
-          },
-          emphasis: {
-            scale: 1.15,
-            label: { fontSize: 13 },
-          },
+          itemStyle: { color: '#4ade80' },
+          labelLayout: { moveOverlap: 'shiftY' },
         },
       ],
     }
-  }, [ordenados, dark, selectedIndex])
+  }, [periodosGrafica, chartLabels, dark, selectedIndex])
 
   const onChartClick = (params: { dataIndex?: number }) => {
-    if (params.dataIndex != null && ordenados[params.dataIndex]) {
-      setSemanaId(ordenados[params.dataIndex].id)
+    if (params.dataIndex != null && periodosGrafica[params.dataIndex]) {
+      setPeriodoId(periodosGrafica[params.dataIndex].id)
     }
   }
 
-  if (!ordenados.length) {
+  if (!compromisos.length) {
     return (
       <p className={cn('text-center text-sm', dark ? 'text-white/60' : 'text-black/50')}>
         Sin datos de compromisos
@@ -360,70 +425,151 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
     )
   }
 
+  const pill = (active: boolean) => hrFilterPill(active, dark)
+
   return (
     <div className="space-y-5 sm:space-y-6">
-      <div className="flex flex-wrap gap-2 sm:gap-2.5">
-        {ordenados.map((s) => {
-          const active = s.id === semana?.id
-          return (
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className={pillGroup(dark)}>
+          <button
+            type="button"
+            onClick={() => setVista('semana')}
+            className={cn(
+              pill(vista === 'semana'),
+              'rounded-full border-0',
+              vista !== 'semana' && 'bg-transparent shadow-none ring-0',
+            )}
+          >
+            Por semana
+          </button>
+          <button
+            type="button"
+            onClick={() => setVista('mes')}
+            className={cn(
+              pill(vista === 'mes'),
+              'rounded-full border-0',
+              vista !== 'mes' && 'bg-transparent shadow-none ring-0',
+            )}
+          >
+            Por mes
+          </button>
+        </div>
+
+        {vista === 'semana' && meses.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={hrLabel(dark)}>Mes</span>
             <button
-              key={s.id}
               type="button"
-              onClick={() => setSemanaId(s.id)}
-              className={hrFilterPill(active, dark)}
+              onClick={() => setMesFiltro(TODOS_MESES)}
+              className={pill(mesFiltro === TODOS_MESES)}
             >
-              {s.fechaLabel}
+              Todos
             </button>
-          )
-        })}
+            {meses.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMesFiltro(m)}
+                className={pill(mesFiltro === m)}
+              >
+                {monthKeyToLabel(m)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {semana && (
-        <div className={cn(hrKpiGrid(), 'lg:grid-cols-6')}>
-          <MetricTile dark={dark} value={String(semana.plantilla)} label="Plantilla" />
-          <MetricTile dark={dark} value={String(semana.vacantes)} label="Vacantes" />
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setPeriodoId('general')}
+          className={cn(
+            pill(periodoId === 'general'),
+            'border-dashed',
+            periodoId === 'general' &&
+              (dark ? 'border-white/40' : 'border-navy/30'),
+          )}
+        >
+          General
+        </button>
+        {vista === 'semana'
+          ? semanasFiltradas.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setPeriodoId(s.id)}
+                className={pill(s.id === periodoId)}
+              >
+                {s.fechaLabel}
+              </button>
+            ))
+          : porMes.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setPeriodoId(m.id)}
+                className={pill(m.id === periodoId)}
+              >
+                {m.label}
+              </button>
+            ))}
+      </div>
+
+      {periodo && (
+        <div className={cn(hrKpiGrid(), 'lg:grid-cols-3 xl:grid-cols-6')}>
+          <MetricTile dark={dark} value={String(periodo.plantilla)} label="Plantilla" />
+          <MetricTile dark={dark} value={String(periodo.vacantes)} label="Vacantes" />
           <MetricTile
             dark={dark}
-            value={String(semana.contrataciones)}
+            value={String(periodo.contrataciones)}
             label="Meta contratación"
+            className="xl:col-span-1"
           />
           <MetricTile
             dark={dark}
             accent
-            value={`${Math.round(semana.cumplimiento)}%`}
+            value={`${Math.round(periodo.cumplimiento)}%`}
             label="Cumplimiento"
           />
-          <MetricTile
-            dark={dark}
-            value={String(semana.altasNombres.length || semana.altas)}
-            label="Altas"
-          />
-          <MetricTile
-            dark={dark}
-            value={String(semana.bajasNombres.length || semana.bajas)}
-            label="Bajas"
-          />
+          <MetricTile dark={dark} value={String(periodo.altas)} label="Altas" />
+          <MetricTile dark={dark} value={String(periodo.bajas)} label="Bajas" />
         </div>
+      )}
+
+      {periodo && (
+        <p
+          className={cn(
+            '-mt-2 text-center text-xs sm:text-sm',
+            dark ? 'text-white/50' : 'text-black/45',
+          )}
+        >
+          Cumplimiento según vacantes cubiertas con altas
+          {periodo.bajas > 0 ? ' (considerando bajas del periodo)' : ''}. Meta de
+          contratación = objetivo planificado en Excel.
+        </p>
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
         <div className={hrPanel(dark, 'overflow-visible p-4 sm:p-5')}>
+          <p
+            className={cn(
+              'mb-3 text-center text-xs font-bold uppercase tracking-widest',
+              dark ? 'text-white/55' : 'text-black/45',
+            )}
+          >
+            {vista === 'mes' ? 'Tendencia por mes' : 'Tendencia por semana'}
+          </p>
           <ReactECharts
             option={trendOption}
-            style={{ height: HR_PANEL_HEIGHT - 32, minHeight: 320, width: '100%' }}
+            style={{ height: HR_PANEL_HEIGHT - 16, minHeight: 340, width: '100%' }}
             notMerge
             onEvents={{ click: onChartClick }}
           />
         </div>
 
-        {semana && (
-          <div
-            className={hrPanel(
-              dark,
-              'flex h-[380px] flex-col p-4 sm:p-5',
-            )}
-          >
-            <SemanaMovimiento semana={semana} dark={dark} />
+        {periodo && (
+          <div className={hrPanel(dark, 'flex h-[400px] flex-col p-4 sm:p-5')}>
+            <PeriodoMovimiento periodo={periodo} dark={dark} />
           </div>
         )}
       </div>
