@@ -140,9 +140,10 @@ export function PresentationMode() {
           <div className={presentationSlideContent('overflow-y-auto')}>
             <Evaluacion360Overview
               oficiales={oficiales}
+              evaluadoresLabels={evaluadoresLabels}
               dark
               large
-              donutHeight={340}
+              donutHeight={320}
             />
           </div>
         )}

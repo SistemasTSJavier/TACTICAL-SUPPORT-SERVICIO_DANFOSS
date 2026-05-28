@@ -13,6 +13,8 @@ type DistribucionDonaProps = {
   dark?: boolean
   /** Sin panel exterior (dentro de Evaluacion360Overview) */
   embedded?: boolean
+  nivelActivo?: string | null
+  onNivelClick?: (label: string | null) => void
 }
 
 export function DistribucionDona({
@@ -20,6 +22,8 @@ export function DistribucionDona({
   height = 360,
   dark = false,
   embedded = false,
+  nivelActivo = null,
+  onNivelClick,
 }: DistribucionDonaProps) {
   const data = useMemo(() => distribucionPorNivel(oficiales), [oficiales])
 
@@ -40,6 +44,7 @@ export function DistribucionDona({
         {
           type: 'pie',
           radius: ['45%', '72%'],
+          selectedMode: 'single',
           itemStyle: {
             borderRadius: 4,
             borderColor: dark ? '#000b29' : '#ffffff',
@@ -51,15 +56,34 @@ export function DistribucionDona({
             fontSize: 11,
             color: dark ? '#ffffff' : '#333333',
           },
+          emphasis: {
+            scale: true,
+            scaleSize: 8,
+          },
           data: data.map((d) => ({
             name: d.label,
             value: d.count,
-            itemStyle: { color: colorPorNivelLabel(d.label) },
+            selected: nivelActivo === d.label,
+            itemStyle: {
+              color: colorPorNivelLabel(d.label),
+              opacity:
+                nivelActivo && nivelActivo !== d.label ? 0.35 : 1,
+            },
           })),
         },
       ],
     }),
-    [data, dark],
+    [data, dark, nivelActivo],
+  )
+
+  const chartEvents = useMemo(
+    () => ({
+      click: (params: { name?: string }) => {
+        if (!onNivelClick || !params.name) return
+        onNivelClick(nivelActivo === params.name ? null : params.name)
+      },
+    }),
+    [onNivelClick, nivelActivo],
   )
 
   if (embedded) {
@@ -70,7 +94,22 @@ export function DistribucionDona({
           dark ? 'border-white/10 bg-white/[0.04]' : 'border-navy/8 bg-surface',
         )}
       >
-        <ReactECharts option={option} style={{ height, width: '100%' }} notMerge />
+        {onNivelClick && (
+          <p
+            className={cn(
+              'mb-2 text-center text-xs sm:text-sm',
+              dark ? 'text-white/55' : 'text-black/50',
+            )}
+          >
+            Toca un segmento para filtrar la lista
+          </p>
+        )}
+        <ReactECharts
+          option={option}
+          style={{ height, width: '100%' }}
+          notMerge
+          onEvents={onNivelClick ? chartEvents : undefined}
+        />
       </div>
     )
   }

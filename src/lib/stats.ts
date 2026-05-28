@@ -80,6 +80,25 @@ export function rankingOficiales(oficiales: EvaluacionOficial[]) {
   return [...getEvaluados(oficiales)].sort((a, b) => b.desempeno - a.desempeno)
 }
 
+export type Filtro360 = 'todos' | 'favorable' | 'pendientes' | string
+
+export function filtrarOficiales360(
+  oficiales: EvaluacionOficial[],
+  filtro: Filtro360,
+) {
+  if (filtro === 'pendientes') {
+    return [...getSinEvaluar(oficiales)]
+  }
+  const evaluados = rankingOficiales(oficiales)
+  if (filtro === 'todos') return evaluados
+  if (filtro === 'favorable') {
+    return evaluados.filter((o) => o.desempeno > 2.5)
+  }
+  return evaluados.filter(
+    (o) => getNivelDesempeno(o.desempeno).label === filtro,
+  )
+}
+
 export function promedioGrupoPorEvaluador(
   oficiales: EvaluacionOficial[],
 ): Record<EvaluadorKey, number> {

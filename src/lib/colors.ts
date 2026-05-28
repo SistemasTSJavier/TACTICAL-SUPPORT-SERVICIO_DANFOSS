@@ -18,6 +18,13 @@ export const CHART = {
     [0.65, '#eab308'],
     [1, '#22c55e'],
   ] as [number, string][],
+  /** Compromisos — gráfica de tendencia */
+  vacantes: '#2563eb',
+  vacantesDim: 'rgba(37, 99, 235, 0.42)',
+  altas: '#22c55e',
+  altasDim: 'rgba(34, 197, 94, 0.42)',
+  bajas: '#ef4444',
+  bajasDim: 'rgba(239, 68, 68, 0.42)',
 } as const
 
 export function colorPorScore(score: number): string {

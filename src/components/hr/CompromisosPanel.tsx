@@ -2,6 +2,7 @@ import ReactECharts from 'echarts-for-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { CompromisoPeriodo, CompromisoSemana } from '@/types/rrhh'
 import { MetricTile } from '@/components/hr/MetricTile'
+import { CHART } from '@/lib/colors'
 import { fechaLabelCorta, monthKeyToLabel } from '@/lib/excelDate'
 import {
   compromisosPorMes,
@@ -288,6 +289,24 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
         left: 'center',
         itemGap: 16,
         textStyle: { color: dark ? '#ffffffe6' : '#333', fontSize: 12 },
+        data: [
+          {
+            name: 'Vacantes',
+            itemStyle: { color: CHART.vacantes },
+          },
+          {
+            name: 'Altas',
+            itemStyle: { color: CHART.altas },
+          },
+          {
+            name: 'Bajas',
+            itemStyle: { color: CHART.bajas },
+          },
+          {
+            name: 'Cumplimiento',
+            itemStyle: { color: '#4ade80' },
+          },
+        ],
       },
       xAxis: {
         type: 'category',
@@ -327,14 +346,11 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
           name: 'Vacantes',
           type: 'bar',
           barGap: '20%',
+          itemStyle: { color: CHART.vacantes },
           data: vacantes.map((v, i) => ({
             value: v,
             itemStyle: {
-              color: barColor(
-                i,
-                dark ? '#38bdf8' : '#000b29',
-                dark ? 'rgba(56,189,248,0.55)' : 'rgba(0,11,41,0.45)',
-              ),
+              color: barColor(i, CHART.vacantes, CHART.vacantesDim),
               borderRadius: [4, 4, 0, 0],
             },
           })),
@@ -343,16 +359,17 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
             position: 'top',
             fontSize: 11,
             fontWeight: 'bold',
-            color: textBright,
+            color: CHART.vacantes,
           },
         },
         {
           name: 'Altas',
           type: 'bar',
+          itemStyle: { color: CHART.altas },
           data: altas.map((v, i) => ({
             value: v,
             itemStyle: {
-              color: barColor(i, '#22c55e', 'rgba(34,197,94,0.55)'),
+              color: barColor(i, CHART.altas, CHART.altasDim),
               borderRadius: [4, 4, 0, 0],
             },
           })),
@@ -360,17 +377,19 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
             show: true,
             position: 'top',
             fontSize: 10,
-            color: '#22c55e',
+            fontWeight: 'bold',
+            color: CHART.altas,
             formatter: (p: { value: number }) => (p.value > 0 ? String(p.value) : ''),
           },
         },
         {
           name: 'Bajas',
           type: 'bar',
+          itemStyle: { color: CHART.bajas },
           data: bajas.map((v, i) => ({
             value: v,
             itemStyle: {
-              color: barColor(i, '#ef4444', 'rgba(239,68,68,0.55)'),
+              color: barColor(i, CHART.bajas, CHART.bajasDim),
               borderRadius: [4, 4, 0, 0],
             },
           })),
@@ -378,7 +397,8 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
             show: true,
             position: 'top',
             fontSize: 10,
-            color: '#ef4444',
+            fontWeight: 'bold',
+            color: CHART.bajas,
             formatter: (p: { value: number }) => (p.value > 0 ? String(p.value) : ''),
           },
         },

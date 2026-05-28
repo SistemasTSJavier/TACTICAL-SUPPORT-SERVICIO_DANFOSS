@@ -48,7 +48,7 @@ export function DashboardPage() {
           <SectionBlock
             step={4}
             title="Evaluación"
-            subtitle="Oficiales a la izquierda, evaluadores arriba, calificaciones al centro y columna Desempeño (como en el Excel) con color por nivel"
+            subtitle="Selecciona un colaborador de la lista para ver las calificaciones de cada evaluador y su desempeño final"
           >
             <TablaEvaluacion
               oficiales={filtrados}
@@ -57,7 +57,11 @@ export function DashboardPage() {
           </SectionBlock>
 
           <SectionBlock step={5} title="Evaluación 360 — Resumen general">
-            <Evaluacion360Overview oficiales={oficiales} donutHeight={400} />
+            <Evaluacion360Overview
+              oficiales={oficiales}
+              evaluadoresLabels={evaluadoresLabels}
+              donutHeight={400}
+            />
           </SectionBlock>
         </div>
       </main>

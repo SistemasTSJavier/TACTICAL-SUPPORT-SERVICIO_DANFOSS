@@ -72,7 +72,7 @@ function DetalleCampos({
       >
         <p
           className={cn(
-            'text-base font-bold leading-tight sm:text-lg',
+            'text-base font-bold leading-snug whitespace-normal break-words sm:text-lg',
             dark ? 'text-white' : 'text-navy',
           )}
         >
@@ -92,6 +92,9 @@ function DetalleCampos({
         <CampoDetalle label="Descripción" value={registro.descripcion} dark={dark} />
         <CampoDetalle label="Compromiso" value={registro.compromiso} dark={dark} />
         <CampoDetalle label="Cierre" value={registro.cierre} dark={dark} />
+        <CampoDetalle label="Encargado" value={registro.encargado} dark={dark} />
+        <CampoDetalle label="Asunto" value={registro.asunto} dark={dark} />
+        <CampoDetalle label="Comentarios" value={registro.comentarios} dark={dark} />
       </div>
     </article>
   )
@@ -143,11 +146,8 @@ export function AusentismosPanel({
   )
 
   const enLoop = colaboradorFiltro === TODOS && registrosVista.length > 1
-  const registroActual = registrosVista[loopIndex]
   const registroMostrado =
-    enLoop && registroActual
-      ? registroActual
-      : registrosVista[Math.min(loopIndex, registrosVista.length - 1)]
+    registrosVista[Math.min(loopIndex, Math.max(0, registrosVista.length - 1))]
 
   useEffect(() => {
     setLoopIndex(0)
@@ -248,8 +248,8 @@ export function AusentismosPanel({
         <MetricTile dark={dark} value={String(repetidos.length)} label="Reincidentes" />
       </div>
 
-      <div className="grid min-h-[480px] grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,380px)_1fr] xl:grid-cols-[minmax(300px,420px)_1fr] lg:gap-5">
-        {/* Lista colaboradores */}
+      <div className="grid min-h-[520px] grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,380px)_1fr] xl:grid-cols-[minmax(300px,420px)_1fr] lg:gap-5">
+        {/* Lista colaboradores — izquierda */}
         <div
           className={hrPanel(
             dark,
@@ -273,7 +273,7 @@ export function AusentismosPanel({
               <span>Todos</span>
               <span
                 className={cn(
-                  'rounded-full px-2 py-0.5 text-xs tabular-nums',
+                  'shrink-0 self-start rounded-full px-2 py-0.5 text-xs tabular-nums sm:self-center',
                   dark ? 'bg-white/15' : 'bg-navy/10',
                 )}
               >
@@ -313,8 +313,24 @@ export function AusentismosPanel({
           </div>
         </div>
 
-        {/* Detalle + gráfica */}
-        <div className="flex min-h-[480px] flex-col gap-4">
+        {/* Derecha: gráfica arriba, descripción abajo */}
+        <div className="flex min-h-[520px] flex-col gap-4">
+          <div className={hrPanel(dark, 'shrink-0 p-3 sm:p-4')}>
+            <p
+              className={cn(
+                'mb-2 text-center text-xs font-bold uppercase tracking-widest',
+                dark ? 'text-white/55' : 'text-black/45',
+              )}
+            >
+              Motivos {colaboradorFiltro === TODOS ? '(general)' : ''}
+            </p>
+            <ReactECharts
+              option={motivoOption}
+              style={{ height: 240, width: '100%' }}
+              notMerge
+            />
+          </div>
+
           <div
             className={hrPanel(
               dark,
@@ -383,22 +399,6 @@ export function AusentismosPanel({
                 Sin registros
               </p>
             )}
-          </div>
-
-          <div className={hrPanel(dark, 'shrink-0 p-3 sm:p-4')}>
-            <p
-              className={cn(
-                'mb-2 text-center text-xs font-bold uppercase tracking-widest',
-                dark ? 'text-white/55' : 'text-black/45',
-              )}
-            >
-              Motivos {colaboradorFiltro === TODOS ? '(general)' : ''}
-            </p>
-            <ReactECharts
-              option={motivoOption}
-              style={{ height: 264, width: '100%' }}
-              notMerge
-            />
           </div>
         </div>
       </div>
