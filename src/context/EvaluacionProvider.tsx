@@ -8,11 +8,15 @@ import {
   type ReactNode,
 } from 'react'
 import type { EvaluacionDataset } from '@/types/evaluacion'
+import { getBundledDataset } from '@/data/bundledDataset'
 import {
   EXCEL_PUBLIC_PATH,
   loadExcelFromUrl,
   parseExcelArrayBuffer,
 } from '@/lib/parseExcel'
+
+const bundledDataset = getBundledDataset()
+const staticOnly = import.meta.env.VITE_STATIC_ONLY === 'true'
 
 type EvaluacionContextValue = {
   data: EvaluacionDataset
@@ -26,10 +30,14 @@ type EvaluacionContextValue = {
 const EvaluacionContext = createContext<EvaluacionContextValue | null>(null)
 
 export function EvaluacionProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<EvaluacionDataset | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<EvaluacionDataset | null>(
+    staticOnly ? bundledDataset : null,
+  )
+  const [loading, setLoading] = useState(!staticOnly)
   const [error, setError] = useState<string | null>(null)
-  const [sourceLabel, setSourceLabel] = useState('')
+  const [sourceLabel, setSourceLabel] = useState(
+    staticOnly ? 'Datos incluidos (HTML/JS estático)' : '',
+  )
 
   const applyData = useCallback((dataset: EvaluacionDataset, source: string) => {
     setData(dataset)
@@ -38,6 +46,10 @@ export function EvaluacionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const reloadFromServer = useCallback(async () => {
+    if (staticOnly) {
+      applyData(getBundledDataset(), 'Datos incluidos (HTML/JS estático)')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -75,6 +87,7 @@ export function EvaluacionProvider({ children }: { children: ReactNode }) {
   )
 
   useEffect(() => {
+    if (staticOnly) return
     void reloadFromServer()
   }, [reloadFromServer])
 
@@ -98,7 +111,7 @@ export function EvaluacionProvider({ children }: { children: ReactNode }) {
           Cargando dashboard DANFOSS…
         </p>
         <p className="mt-2 max-w-md text-base text-black/55">
-          Leyendo Excel: compromisos, bajas, ausentismos y evaluación 360
+          Cargando datos del dashboard…
         </p>
       </div>
     )

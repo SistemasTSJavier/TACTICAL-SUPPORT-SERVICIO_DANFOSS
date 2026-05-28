@@ -3,9 +3,14 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const base = '/TACTICAL-SUPPORT-SERVICIO_DANFOSS/'
+/** Rutas relativas: solo HTML/CSS/JS en GitHub Pages, sin depender de rutas absolutas. */
+const base = './'
 
-const env = { ...process.env, VITE_BASE_PATH: base }
+const env = {
+  ...process.env,
+  VITE_BASE_PATH: base,
+  VITE_STATIC_ONLY: 'true',
+}
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
 function run(script) {
