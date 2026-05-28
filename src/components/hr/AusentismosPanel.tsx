@@ -2,10 +2,14 @@ import ReactECharts from 'echarts-for-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { AusentismoRegistro } from '@/types/rrhh'
 import { MetricTile } from '@/components/hr/MetricTile'
+import { weekKeyToLabel } from '@/lib/excelDate'
 import {
+  ausentismosHistoricos,
   ausentismosPorColaborador,
   ausentismosRepetidos,
+  ausentismosSemanaActual,
   motivosAusentismosConDetalle,
+  semanaActualKey,
 } from '@/lib/statsRrhh'
 import {
   hrDetailCard,
@@ -100,10 +104,24 @@ function DetalleCampos({
   )
 }
 
-export function AusentismosPanel({
+function useAusentismosVista(ausentismos: AusentismoRegistro[]) {
+  const activos = useMemo(() => ausentismosSemanaActual(ausentismos), [ausentismos])
+  const historicos = useMemo(() => ausentismosHistoricos(ausentismos), [ausentismos])
+  const semanaLabel = weekKeyToLabel(semanaActualKey())
+  return { activos, historicos, semanaLabel }
+}
+
+function PanelAusentismos({
   ausentismos,
-  dark = false,
-}: AusentismosPanelProps) {
+  dark,
+  titulo,
+  soloLectura = false,
+}: {
+  ausentismos: AusentismoRegistro[]
+  dark: boolean
+  titulo: string
+  soloLectura?: boolean
+}) {
   const colaboradoresLista = useMemo(
     () => ausentismosPorColaborador(ausentismos),
     [ausentismos],
@@ -135,29 +153,20 @@ export function AusentismosPanel({
     return ausentismos.filter((a) => a.nombre === colaboradorFiltro)
   }, [ausentismos, colaboradorFiltro])
 
-  const repetidos = useMemo(
-    () => ausentismosRepetidos(filtradas),
-    [filtradas],
-  )
+  const repetidos = useMemo(() => ausentismosRepetidos(filtradas), [filtradas])
+  const motivos = useMemo(() => motivosAusentismosConDetalle(filtradas), [filtradas])
 
-  const motivos = useMemo(
-    () => motivosAusentismosConDetalle(filtradas),
-    [filtradas],
-  )
-
-  const enLoop = colaboradorFiltro === TODOS && registrosVista.length > 1
+  const enLoop = !soloLectura && colaboradorFiltro === TODOS && registrosVista.length > 1
   const registroMostrado =
     registrosVista[Math.min(loopIndex, Math.max(0, registrosVista.length - 1))]
 
   useEffect(() => {
     setLoopIndex(0)
     setFadeIn(true)
-  }, [colaboradorFiltro])
+  }, [colaboradorFiltro, ausentismos])
 
   useEffect(() => {
-    if (loopIndex >= registrosVista.length) {
-      setLoopIndex(0)
-    }
+    if (loopIndex >= registrosVista.length) setLoopIndex(0)
   }, [loopIndex, registrosVista.length])
 
   useEffect(() => {
@@ -168,11 +177,9 @@ export function AusentismosPanel({
 
   useEffect(() => {
     if (!enLoop) return
-
     const timer = setInterval(() => {
       setLoopIndex((i) => (i + 1) % registrosVista.length)
     }, LOOP_MS)
-
     return () => clearInterval(timer)
   }, [enLoop, registrosVista.length])
 
@@ -224,36 +231,49 @@ export function AusentismosPanel({
         : dark
           ? 'border-white/12 bg-white/5 text-white/85 hover:border-white/25 hover:bg-white/10'
           : 'border-navy/10 bg-white text-navy hover:border-navy/20 hover:bg-surface',
+      soloLectura && 'opacity-90',
     )
 
   if (!ausentismos.length) {
     return (
-      <div className={hrKpiGrid()}>
-        <MetricTile dark={dark} value="0" label="Registros" />
-        <MetricTile dark={dark} value="0" label="Colaboradores" />
-        <MetricTile dark={dark} value="0" label="Reincidentes" />
-      </div>
+      <p className={cn('text-center text-sm py-6', dark ? 'text-white/50' : 'text-black/50')}>
+        Sin registros en este periodo
+      </p>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4">
+      <p
+        className={cn(
+          'text-xs font-bold uppercase tracking-widest',
+          dark ? 'text-white/55' : 'text-black/45',
+        )}
+      >
+        {titulo}
+        {soloLectura && (
+          <span
+            className={cn(
+              'ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold normal-case',
+              dark ? 'bg-white/10 text-white/60' : 'bg-black/8 text-black/50',
+            )}
+          >
+            Solo consulta
+          </span>
+        )}
+      </p>
+
       <div className={hrKpiGrid()}>
-        <MetricTile dark={dark} accent value={String(filtradas.length)} label="Registros" />
-        <MetricTile
-          dark={dark}
-          value={String(colaboradoresLista.length)}
-          label="Colaboradores"
-        />
+        <MetricTile dark={dark} accent={!soloLectura} value={String(filtradas.length)} label="Registros" />
+        <MetricTile dark={dark} value={String(colaboradoresLista.length)} label="Colaboradores" />
         <MetricTile dark={dark} value={String(repetidos.length)} label="Reincidentes" />
       </div>
 
-      <div className="grid min-h-[520px] grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,380px)_1fr] xl:grid-cols-[minmax(300px,420px)_1fr] lg:gap-5">
-        {/* Lista colaboradores — izquierda */}
+      <div className="grid min-h-[480px] grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,380px)_1fr] xl:grid-cols-[minmax(300px,420px)_1fr] lg:gap-5">
         <div
           className={hrPanel(
             dark,
-            'flex max-h-[520px] flex-col p-3 sm:max-h-[560px] sm:p-4 lg:max-h-none lg:h-[520px]',
+            'flex max-h-[480px] flex-col p-3 sm:max-h-[520px] sm:p-4 lg:max-h-none lg:h-[480px]',
           )}
         >
           <p
@@ -313,8 +333,7 @@ export function AusentismosPanel({
           </div>
         </div>
 
-        {/* Derecha: gráfica arriba, descripción abajo */}
-        <div className="flex min-h-[520px] flex-col gap-4">
+        <div className="flex min-h-[480px] flex-col gap-4">
           <div className={hrPanel(dark, 'shrink-0 p-3 sm:p-4')}>
             <p
               className={cn(
@@ -322,19 +341,15 @@ export function AusentismosPanel({
                 dark ? 'text-white/55' : 'text-black/45',
               )}
             >
-              Motivos {colaboradorFiltro === TODOS ? '(general)' : ''}
+              Motivos {colaboradorFiltro === TODOS ? '' : `· ${colaboradorFiltro}`}
             </p>
-            <ReactECharts
-              option={motivoOption}
-              style={{ height: 240, width: '100%' }}
-              notMerge
-            />
+            <ReactECharts option={motivoOption} style={{ height: 220, width: '100%' }} notMerge />
           </div>
 
           <div
             className={hrPanel(
               dark,
-              'flex min-h-[240px] flex-1 flex-col p-3 sm:min-h-[280px] sm:p-5',
+              'flex min-h-[220px] flex-1 flex-col p-3 sm:min-h-[260px] sm:p-5',
             )}
           >
             {registroMostrado ? (
@@ -360,13 +375,9 @@ export function AusentismosPanel({
                     fadeIn ? 'opacity-100' : 'opacity-0',
                   )}
                 >
-                  <DetalleCampos
-                    key={registroMostrado.id}
-                    registro={registroMostrado}
-                    dark={dark}
-                  />
+                  <DetalleCampos key={registroMostrado.id} registro={registroMostrado} dark={dark} />
                 </div>
-                {registrosVista.length > 1 && (
+                {registrosVista.length > 1 && !soloLectura && (
                   <div className="mt-2 flex shrink-0 justify-center gap-1">
                     {registrosVista.map((r, i) => (
                       <button
@@ -402,6 +413,65 @@ export function AusentismosPanel({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function AusentismosPanel({
+  ausentismos,
+  dark = false,
+}: AusentismosPanelProps) {
+  const { activos, historicos, semanaLabel } = useAusentismosVista(ausentismos)
+  const [verHistorico, setVerHistorico] = useState(false)
+
+  if (!ausentismos.length) {
+    return (
+      <div className={hrKpiGrid()}>
+        <MetricTile dark={dark} value="0" label="Registros" />
+        <MetricTile dark={dark} value="0" label="Colaboradores" />
+        <MetricTile dark={dark} value="0" label="Reincidentes" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <PanelAusentismos
+        ausentismos={activos}
+        dark={dark}
+        titulo={`Semana actual · ${semanaLabel}`}
+      />
+
+      {historicos.length > 0 && (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setVerHistorico((v) => !v)}
+            className={cn(
+              'flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-colors',
+              dark
+                ? 'border-white/15 bg-white/5 text-white/90 hover:bg-white/10'
+                : 'border-navy/15 bg-surface text-navy hover:bg-navy/5',
+            )}
+          >
+            <span>
+              Histórico ({historicos.length} registros anteriores)
+            </span>
+            <span className={cn('text-xs', dark ? 'text-white/55' : 'text-black/45')}>
+              {verHistorico ? 'Ocultar' : 'Mostrar'}
+            </span>
+          </button>
+
+          {verHistorico && (
+            <PanelAusentismos
+              ausentismos={historicos}
+              dark={dark}
+              titulo="Semanas anteriores"
+              soloLectura
+            />
+          )}
+        </div>
+      )}
     </div>
   )
 }

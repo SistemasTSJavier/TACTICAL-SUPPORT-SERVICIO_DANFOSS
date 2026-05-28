@@ -198,6 +198,34 @@ function PeriodoMovimiento({
           dark={dark}
         />
       </div>
+
+      {esMes && periodo.semanas.length > 1 && (
+        <div
+          className={cn(
+            'mt-4 shrink-0 space-y-2 border-t pt-4',
+            dark ? 'border-white/12' : 'border-navy/10',
+          )}
+        >
+          <p className={hrFieldLabel(dark)}>Desglose por semana</p>
+          {periodo.semanas.map((s) => (
+            <div
+              key={s.id}
+              className={cn(
+                'rounded-lg border px-3 py-2 text-sm',
+                dark ? 'border-white/12 bg-white/5' : 'border-navy/10 bg-surface',
+              )}
+            >
+              <p className={cn('font-semibold', dark ? 'text-white/90' : 'text-navy')}>
+                {s.fechaLabel}
+              </p>
+              <p className={cn('mt-1 tabular-nums', dark ? 'text-white/65' : 'text-black/55')}>
+                Vacantes {s.vacantes} · Altas {s.altasNombres.length || s.altas} · Bajas{' '}
+                {s.bajasNombres.length || s.bajas}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -216,21 +244,45 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
     [compromisos, mesFiltro],
   )
 
+  const mesSeleccionado = mesFiltro !== TODOS_MESES
+
+  const semanasDelMes = useMemo(
+    () => filtrarCompromisosPorMes(compromisos, mesFiltro),
+    [compromisos, mesFiltro],
+  )
+
+  const periodoMes = useMemo(
+    () => (mesSeleccionado ? porMes.find((m) => m.id === mesFiltro) : undefined),
+    [mesSeleccionado, mesFiltro, porMes],
+  )
+
   const periodosGrafica = useMemo(() => {
+    if (mesSeleccionado) return periodosDesdeSemanas(semanasDelMes)
     if (vista === 'mes') return porMes
     return periodosDesdeSemanas(semanasFiltradas)
-  }, [vista, porMes, semanasFiltradas])
+  }, [vista, mesSeleccionado, porMes, semanasDelMes, semanasFiltradas])
 
-  const periodo =
+  const periodoDetalle =
     periodoId === 'general'
       ? general
-      : (periodosGrafica.find((p) => p.id === periodoId) ??
-        periodosGrafica[periodosGrafica.length - 1] ??
-        general)
+      : periodoId === mesFiltro && periodoMes
+        ? periodoMes
+        : (periodosGrafica.find((p) => p.id === periodoId) ??
+          (mesSeleccionado && periodoMes
+            ? periodoMes
+            : periodosGrafica[periodosGrafica.length - 1]) ??
+          general)
 
-  const selectedIndex = periodosGrafica.findIndex((p) => p.id === periodo?.id)
+  const periodoKpis =
+    mesSeleccionado && periodoMes ? periodoMes : periodoDetalle
+
+  const selectedIndex = periodosGrafica.findIndex((p) => p.id === periodoDetalle?.id)
 
   useEffect(() => {
+    if (mesSeleccionado) {
+      setPeriodoId(mesFiltro)
+      return
+    }
     if (vista === 'mes') {
       const ultimo = porMes[porMes.length - 1]
       setPeriodoId(ultimo?.id ?? 'general')
@@ -238,12 +290,14 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
     }
     const ultima = semanasFiltradas[semanasFiltradas.length - 1]
     setPeriodoId(ultima?.id ?? 'general')
-  }, [vista, mesFiltro, porMes, semanasFiltradas])
+  }, [vista, mesFiltro, mesSeleccionado, porMes, semanasFiltradas])
 
   const chartLabels = useMemo(() => {
-    if (vista === 'mes') return periodosGrafica.map((p) => p.label)
+    if (vista === 'mes' && !mesSeleccionado) {
+      return periodosGrafica.map((p) => p.label)
+    }
     return periodosGrafica.map((p) => fechaLabelCorta(p.label))
-  }, [vista, periodosGrafica])
+  }, [vista, mesSeleccionado, periodosGrafica])
 
   const trendOption = useMemo(() => {
     const vacantes = periodosGrafica.map((p) => p.vacantes)
@@ -252,8 +306,10 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
     const cumplimiento = periodosGrafica.map((p) =>
       Math.round(p.cumplimiento * 10) / 10,
     )
-    const minCumpl = Math.min(...cumplimiento, 90)
-    const cumplMin = Math.max(0, Math.floor(minCumpl) - 5)
+    const minCumpl = Math.min(...cumplimiento, 100)
+    const maxCumpl = Math.max(...cumplimiento, 0)
+    const cumplMin = Math.max(0, Math.floor(minCumpl) - 3)
+    const cumplMax = Math.min(100, Math.ceil(maxCumpl) + 3)
     const countMax = Math.max(4, ...vacantes, ...altas, ...bajas) + 1
     const manyLabels = chartLabels.length > 5
 
@@ -336,7 +392,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
           type: 'value',
           name: '%',
           min: cumplMin,
-          max: 100,
+          max: cumplMax,
           axisLabel: { formatter: '{value}%', color: textMuted, fontSize: 11 },
           splitLine: { show: false },
         },
@@ -432,9 +488,13 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
   }, [periodosGrafica, chartLabels, dark, selectedIndex])
 
   const onChartClick = (params: { dataIndex?: number }) => {
-    if (params.dataIndex != null && periodosGrafica[params.dataIndex]) {
-      setPeriodoId(periodosGrafica[params.dataIndex].id)
+    if (params.dataIndex == null || !periodosGrafica[params.dataIndex]) return
+    const clicked = periodosGrafica[params.dataIndex]
+    if (vista === 'mes' && !mesSeleccionado && clicked.tipo === 'mes') {
+      setMesFiltro(clicked.id)
+      return
     }
+    setPeriodoId(clicked.id)
   }
 
   if (!compromisos.length) {
@@ -467,7 +527,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
           </button>
         </div>
 
-        {vista === 'semana' && meses.length > 0 && (
+        {meses.length > 0 && (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <span className={cn(hrLabel(dark), 'shrink-0')}>Mes</span>
             <div className={hrFilterScrollRow()}>
@@ -506,47 +566,65 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
         >
           General
         </button>
-        {vista === 'semana'
-          ? semanasFiltradas.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setPeriodoId(s.id)}
-                className={cn(pill(s.id === periodoId), 'whitespace-nowrap')}
-              >
-                {s.fechaLabel}
-              </button>
-            ))
+        {vista === 'semana' || mesSeleccionado
+          ? (
+              <>
+                {mesSeleccionado && periodoMes && (
+                  <button
+                    type="button"
+                    onClick={() => setPeriodoId(mesFiltro)}
+                    className={cn(
+                      pill(periodoId === mesFiltro),
+                      'whitespace-nowrap',
+                    )}
+                  >
+                    Resumen {monthKeyToLabel(mesFiltro)}
+                  </button>
+                )}
+                {(mesSeleccionado ? semanasDelMes : semanasFiltradas).map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setPeriodoId(s.id)}
+                    className={cn(pill(s.id === periodoId), 'whitespace-nowrap')}
+                  >
+                    {s.fechaLabel}
+                  </button>
+                ))}
+              </>
+            )
           : porMes.map((m) => (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setPeriodoId(m.id)}
-                className={pill(m.id === periodoId)}
+                onClick={() => {
+                  setMesFiltro(m.id)
+                }}
+                className={pill(m.id === mesFiltro)}
               >
                 {m.label}
               </button>
             ))}
       </div>
 
-      {periodo && (
+      {periodoKpis && (
         <div className={cn(hrKpiGrid(), 'sm:grid-cols-3 xl:grid-cols-6')}>
-          <MetricTile dark={dark} value={String(periodo.plantilla)} label="Plantilla" />
-          <MetricTile dark={dark} value={String(periodo.vacantes)} label="Vacantes" />
+          <MetricTile dark={dark} value={String(periodoKpis.plantilla)} label="Plantilla" />
+          <MetricTile dark={dark} value={String(periodoKpis.vacantes)} label="Vacantes" />
           <MetricTile
             dark={dark}
-            value={String(periodo.contrataciones)}
+            value={String(periodoKpis.contrataciones)}
             label="Meta contratación"
             className="xl:col-span-1"
           />
           <MetricTile
             dark={dark}
             accent
-            value={`${Math.round(periodo.cumplimiento)}%`}
+            value={`${Math.round(periodoKpis.cumplimiento)}%`}
             label="Cumplimiento"
           />
-          <MetricTile dark={dark} value={String(periodo.altas)} label="Altas" />
-          <MetricTile dark={dark} value={String(periodo.bajas)} label="Bajas" />
+          <MetricTile dark={dark} value={String(periodoKpis.altas)} label="Altas" />
+          <MetricTile dark={dark} value={String(periodoKpis.bajas)} label="Bajas" />
         </div>
       )}
 
@@ -558,7 +636,11 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
               dark ? 'text-white/70' : 'text-black/50',
             )}
           >
-            {vista === 'mes' ? 'Tendencia por mes' : 'Tendencia por semana'}
+            {mesSeleccionado
+              ? `Semanas · ${monthKeyToLabel(mesFiltro)}`
+              : vista === 'mes'
+                ? 'Tendencia por mes (clic en barra para desglose)'
+                : 'Tendencia por semana'}
           </p>
           <div className="min-h-[260px] w-full sm:min-h-[320px] lg:min-h-[360px]">
             <ReactECharts
@@ -571,14 +653,14 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
           </div>
         </div>
 
-        {periodo && (
+        {periodoDetalle && (
           <div
             className={hrPanel(
               dark,
               'flex min-h-[320px] flex-col p-3 sm:min-h-[360px] sm:p-5 lg:min-h-[400px]',
             )}
           >
-            <PeriodoMovimiento periodo={periodo} dark={dark} />
+            <PeriodoMovimiento periodo={periodoDetalle} dark={dark} />
           </div>
         )}
       </div>

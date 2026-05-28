@@ -49,6 +49,7 @@ export type AusentismoRegistro = {
   id: string
   fecha: string
   mes: string
+  semana: string
   turno: string
   nombre: string
   asunto: string

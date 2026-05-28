@@ -127,7 +127,11 @@ export function PresentationMode() {
         )}
 
         {slide === 4 && (
-          <div className={presentationSlideContent('overflow-y-auto')}>
+          <div
+            className={presentationSlideContent(
+              'flex min-h-0 flex-1 flex-col overflow-hidden',
+            )}
+          >
             <TablaEvaluacion
               oficiales={oficiales}
               evaluadoresLabels={evaluadoresLabels}

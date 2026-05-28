@@ -78,6 +78,18 @@ body {
   color: #ffffff !important;
 }
 
+/* Sección evaluación: altura fluida del chart */
+.eval-section .eval-ranking-chart {
+  width: 100% !important;
+}
+
+@media (max-width: 639px) {
+  .eval-section .eval-ranking-chart {
+    min-height: 200px !important;
+    height: clamp(200px, 42vw, 280px) !important;
+  }
+}
+
 .chart-card-title {
   letter-spacing: -0.02em;
 }
@@ -149,6 +161,28 @@ body {
 }
 
 .presentation-slide {
+  width: 100%;
+}
+
+.presentation-slide .eval-section {
+  height: 100%;
+  max-height: calc(100vh - 7.5rem);
+}
+
+.presentation-slide .eval-list-scroll {
+  scrollbar-width: thin;
+}
+
+.eval-sub-card {
+  height: fit-content;
+}
+
+.eval-chart-fit,
+.eval-chart-box > div:last-child {
+  line-height: 0;
+}
+
+.eval-chart-fit {
   width: 100%;
 }
 

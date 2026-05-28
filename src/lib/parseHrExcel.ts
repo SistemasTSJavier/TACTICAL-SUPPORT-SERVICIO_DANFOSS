@@ -5,7 +5,11 @@ import type {
   CompromisoSemana,
   RrhhDataset,
 } from '@/types/rrhh'
-import { excelDateToMonthKey, formatExcelDate } from '@/lib/excelDate'
+import {
+  excelDateToMonthKey,
+  excelDateToWeekKey,
+  formatExcelDate,
+} from '@/lib/excelDate'
 
 function mesDesdeFechaRaw(value: unknown): string {
   return excelDateToMonthKey(value)
@@ -195,6 +199,7 @@ function parseAusentismos(rows: unknown[][]): AusentismoRegistro[] {
         id: `aus-${index + 1}`,
         fecha: formatExcelDate(fechaRaw),
         mes: mesDesdeFechaRaw(fechaRaw),
+        semana: excelDateToWeekKey(fechaRaw),
         turno: String(row[cTurno >= 0 ? cTurno : 1] ?? '').trim().toUpperCase(),
         nombre: String(row[cNombre >= 0 ? cNombre : 2] ?? '').trim(),
         asunto: String(row[cAsunto >= 0 ? cAsunto : 3] ?? '').trim(),

@@ -4,9 +4,24 @@ import type {
   CompromisoPeriodo,
   CompromisoSemana,
 } from '@/types/rrhh'
-import { monthKeyToLabel } from '@/lib/excelDate'
+import { monthKeyToLabel, semanaActualKey } from '@/lib/excelDate'
+
+export { semanaActualKey }
 
 const TODOS_MESES = 'todos'
+
+/** Vacantes por semana = recuento (snapshot de la semana). */
+export function recuentoVacantesSemanas(semanas: CompromisoSemana[]): number {
+  if (semanas.length === 0) return 0
+  const conVacante = semanas.filter((s) => s.vacantes > 0)
+  if (conVacante.length > 0) return conVacante[conVacante.length - 1].vacantes
+  return semanas[semanas.length - 1].vacantes
+}
+
+/** Vacantes del mes = suma de vacantes de todas las semanas (para % cumplimiento mensual). */
+export function sumaVacantesSemanas(semanas: CompromisoSemana[]): number {
+  return semanas.reduce((sum, s) => sum + s.vacantes, 0)
+}
 
 /** Cumplimiento: cobertura de vacantes con altas (periodo semana o mes). */
 export function calcularCumplimientoCompromiso(
@@ -90,10 +105,8 @@ export function compromisosPorMes(
       const bajas =
         bajasNombres.length ||
         semanas.reduce((sum, x) => sum + (x.bajasNombres.length || x.bajas), 0)
-      const vacantes = semanas.reduce((sum, x) => sum + x.vacantes, 0)
+      const vacantes = sumaVacantesSemanas(semanas)
       const contrataciones = semanas.reduce((sum, x) => sum + x.contrataciones, 0)
-      const promedioExcel =
-        semanas.reduce((sum, x) => sum + x.cumplimiento, 0) / semanas.length
 
       return {
         id: mes,
@@ -103,12 +116,7 @@ export function compromisosPorMes(
         vacantes,
         puesto: semanas.find((x) => x.puesto)?.puesto ?? '',
         contrataciones,
-        cumplimiento: calcularCumplimientoCompromiso(
-          vacantes,
-          altas,
-          bajas,
-          promedioExcel,
-        ),
+        cumplimiento: calcularCumplimientoCompromiso(vacantes, altas, bajas),
         altas,
         bajas,
         altasNombres,
@@ -150,7 +158,7 @@ export function resumenGeneralCompromisos(
   const bajas =
     bajasNombres.length ||
     semanas.reduce((sum, x) => sum + (x.bajasNombres.length || x.bajas), 0)
-  const vacantes = semanas.reduce((sum, x) => sum + x.vacantes, 0)
+  const vacantes = recuentoVacantesSemanas(semanas)
 
   return {
     id: 'general',
@@ -205,6 +213,20 @@ export function motivosBajasConDetalle(bajas: BajaRegistro[]) {
 
 export function mesesConBajas(bajas: BajaRegistro[]) {
   return bajasPorMes(bajas)
+}
+
+export function ausentismosSemanaActual(ausentismos: AusentismoRegistro[]) {
+  const actual = semanaActualKey()
+  return ausentismos.filter((a) => a.semana === actual)
+}
+
+export function ausentismosHistoricos(ausentismos: AusentismoRegistro[]) {
+  const actual = semanaActualKey()
+  return ausentismos.filter((a) => a.semana !== actual)
+}
+
+export function semanasAusentismos(ausentismos: AusentismoRegistro[]) {
+  return [...new Set(ausentismos.map((a) => a.semana).filter(Boolean))].sort()
 }
 
 export function ausentismosPorColaborador(ausentismos: AusentismoRegistro[]) {

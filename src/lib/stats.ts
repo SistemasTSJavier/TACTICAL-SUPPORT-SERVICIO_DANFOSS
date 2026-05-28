@@ -1,4 +1,9 @@
-import { EVALUADOR_KEYS, type EvaluacionOficial, type EvaluadorKey } from '@/types/evaluacion'
+import {
+  EVALUADOR_KEYS,
+  type EvaluacionOficial,
+  type EvaluadoresLabels,
+  type EvaluadorKey,
+} from '@/types/evaluacion'
 import { getNivelDesempeno, NOMENCLATURA } from '@/lib/nomenclatura'
 
 export function getEvaluados(oficiales: EvaluacionOficial[]) {
@@ -81,6 +86,46 @@ export function rankingOficiales(oficiales: EvaluacionOficial[]) {
 }
 
 export type Filtro360 = 'todos' | 'favorable' | 'pendientes' | string
+
+/** Promedio recibido por cada una de las 6 personas evaluadas (columnas del Excel). */
+export function promediosSeisPersonasEvaluadas(
+  oficiales: EvaluacionOficial[],
+  labels: EvaluadoresLabels,
+) {
+  const filas = oficiales.filter((o) => !o.sinEvaluar)
+  const items: { id: string; nombre: string; promedio: number }[] = []
+
+  for (const key of EVALUADOR_KEYS) {
+    const scores = filas
+      .map((o) => o.evaluadores[key])
+      .filter((s): s is number => s !== null && s > 0)
+    if (scores.length === 0) continue
+    items.push({
+      id: key,
+      nombre: labels[key],
+      promedio:
+        Math.round(
+          (scores.reduce((a, b) => a + b, 0) / scores.length) * 100,
+        ) / 100,
+    })
+  }
+
+  const tsScores = filas
+    .map((o) => o.ts)
+    .filter((s): s is number => s !== null && s > 0)
+  if (tsScores.length > 0) {
+    items.push({
+      id: 'ts',
+      nombre: 'TS',
+      promedio:
+        Math.round(
+          (tsScores.reduce((a, b) => a + b, 0) / tsScores.length) * 100,
+        ) / 100,
+    })
+  }
+
+  return items
+}
 
 export function filtrarOficiales360(
   oficiales: EvaluacionOficial[],
