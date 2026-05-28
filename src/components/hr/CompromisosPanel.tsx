@@ -23,7 +23,6 @@ import {
   hrKpiGrid,
   hrLabel,
   hrPanel,
-  hrScrollArea,
 } from '@/lib/dashboardStyles'
 import { cn } from '@/lib/utils'
 
@@ -104,7 +103,7 @@ function PeriodoMovimiento({
   const esMes = periodo.tipo === 'mes'
 
   return (
-    <div className={cn('flex h-full flex-col', hrScrollArea(dark))}>
+    <div className="flex h-fit flex-col">
       <p
         className={cn(
           'mb-3 shrink-0 text-center text-xs font-bold uppercase tracking-widest sm:text-sm',
@@ -112,16 +111,6 @@ function PeriodoMovimiento({
         )}
       >
         {periodo.label}
-        {esMes && periodo.semanas.length > 1 && (
-          <span
-            className={cn(
-              'ml-2 font-normal normal-case',
-              dark ? 'text-white/55' : 'text-black/45',
-            )}
-          >
-            ({periodo.semanas.length} semanas)
-          </span>
-        )}
       </p>
 
       {periodo.vacantes > 0 && periodo.puesto && (
@@ -183,8 +172,28 @@ function PeriodoMovimiento({
           </p>
         </div>
       </div>
+      <p
+        className={cn(
+          'mb-3 shrink-0 text-center text-xs',
+          dark ? 'text-white/55' : 'text-black/45',
+        )}
+      >
+        Cumplimiento:{' '}
+        <span className="font-bold text-emerald-500">
+          {Math.round(periodo.cumplimiento * 10) / 10}%
+        </span>
+        {esMes ? (
+          <span>
+            {' '}
+            (promedio de {periodo.semanas.length}{' '}
+            {periodo.semanas.length === 1 ? 'semana' : 'semanas'})
+          </span>
+        ) : (
+          <span> (altas ÷ vacantes + bajas)</span>
+        )}
+      </p>
 
-      <div className="grid min-h-0 flex-1 gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <ListaMovimiento
           titulo="Altas"
           nombres={periodo.altasNombres}
@@ -198,34 +207,6 @@ function PeriodoMovimiento({
           dark={dark}
         />
       </div>
-
-      {esMes && periodo.semanas.length > 1 && (
-        <div
-          className={cn(
-            'mt-4 shrink-0 space-y-2 border-t pt-4',
-            dark ? 'border-white/12' : 'border-navy/10',
-          )}
-        >
-          <p className={hrFieldLabel(dark)}>Desglose por semana</p>
-          {periodo.semanas.map((s) => (
-            <div
-              key={s.id}
-              className={cn(
-                'rounded-lg border px-3 py-2 text-sm',
-                dark ? 'border-white/12 bg-white/5' : 'border-navy/10 bg-surface',
-              )}
-            >
-              <p className={cn('font-semibold', dark ? 'text-white/90' : 'text-navy')}>
-                {s.fechaLabel}
-              </p>
-              <p className={cn('mt-1 tabular-nums', dark ? 'text-white/65' : 'text-black/55')}>
-                Vacantes {s.vacantes} · Altas {s.altasNombres.length || s.altas} · Bajas{' '}
-                {s.bajasNombres.length || s.bajas}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -351,12 +332,12 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
             itemStyle: { color: CHART.vacantes },
           },
           {
-            name: 'Altas',
-            itemStyle: { color: CHART.altas },
-          },
-          {
             name: 'Bajas',
             itemStyle: { color: CHART.bajas },
+          },
+          {
+            name: 'Altas',
+            itemStyle: { color: CHART.altas },
           },
           {
             name: 'Cumplimiento',
@@ -614,13 +595,13 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
           <MetricTile
             dark={dark}
             value={String(periodoKpis.contrataciones)}
-            label="Meta contratación"
+            label="Meta"
             className="xl:col-span-1"
           />
           <MetricTile
             dark={dark}
             accent
-            value={`${Math.round(periodoKpis.cumplimiento)}%`}
+            value={`${Math.round(periodoKpis.cumplimiento * 10) / 10}%`}
             label="Cumplimiento"
           />
           <MetricTile dark={dark} value={String(periodoKpis.altas)} label="Altas" />
@@ -628,7 +609,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2 xl:gap-5">
         <div className={hrPanel(dark, 'overflow-visible p-3 sm:p-5')}>
           <p
             className={cn(
@@ -641,6 +622,15 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
               : vista === 'mes'
                 ? 'Tendencia por mes (clic en barra para desglose)'
                 : 'Tendencia por semana'}
+            <span
+              className={cn(
+                'mt-1 block font-normal normal-case tracking-normal',
+                dark ? 'text-white/50' : 'text-black/45',
+              )}
+            >
+              Semana: cumplimiento por semana. Mes: promedio de las semanas. Meta Excel: solo
+              referencia.
+            </span>
           </p>
           <div className="min-h-[260px] w-full sm:min-h-[320px] lg:min-h-[360px]">
             <ReactECharts
@@ -654,12 +644,7 @@ export function CompromisosPanel({ compromisos, dark = false }: CompromisosPanel
         </div>
 
         {periodoDetalle && (
-          <div
-            className={hrPanel(
-              dark,
-              'flex min-h-[320px] flex-col p-3 sm:min-h-[360px] sm:p-5 lg:min-h-[400px]',
-            )}
-          >
+          <div className={hrPanel(dark, 'h-fit p-3 sm:p-5')}>
             <PeriodoMovimiento periodo={periodoDetalle} dark={dark} />
           </div>
         )}

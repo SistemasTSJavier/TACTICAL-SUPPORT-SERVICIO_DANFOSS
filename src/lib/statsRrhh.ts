@@ -18,27 +18,45 @@ export function recuentoVacantesSemanas(semanas: CompromisoSemana[]): number {
   return semanas[semanas.length - 1].vacantes
 }
 
-/** Vacantes del mes = suma de vacantes de todas las semanas (para % cumplimiento mensual). */
+/** Vacantes del mes = suma de vacantes de todas las semanas (solo KPI agregado). */
 export function sumaVacantesSemanas(semanas: CompromisoSemana[]): number {
   return semanas.reduce((sum, s) => sum + s.vacantes, 0)
 }
 
-/** Cumplimiento: cobertura de vacantes con altas (periodo semana o mes). */
+/**
+ * % cumplimiento semanal: altas ÷ (vacantes + bajas) × 100.
+ * Las bajas penalizan (aumentan el denominador). No usa el dato "meta/contratación" del Excel.
+ */
 export function calcularCumplimientoCompromiso(
   vacantes: number,
   altas: number,
   bajas: number,
-  excelCumplimiento?: number,
 ): number {
-  if (vacantes > 0) {
-    return Math.min(100, Math.round((altas / vacantes) * 1000) / 10)
+  const objetivo = vacantes + bajas
+  if (objetivo > 0) {
+    return Math.min(100, Math.round((altas / objetivo) * 1000) / 10)
   }
-  if (excelCumplimiento != null && excelCumplimiento > 0) {
-    return Math.round(excelCumplimiento * 10) / 10
+  return 100
+}
+
+function altasBajasSemana(s: CompromisoSemana) {
+  return {
+    altas: s.altasNombres.length || s.altas,
+    bajas: s.bajasNombres.length || s.bajas,
   }
-  const movimiento = altas + bajas
-  if (movimiento === 0) return 100
-  return Math.min(100, Math.round((altas / movimiento) * 1000) / 10)
+}
+
+/** Cumplimiento de una semana (siempre por semana, nunca Excel). */
+export function cumplimientoSemana(s: CompromisoSemana): number {
+  const { altas, bajas } = altasBajasSemana(s)
+  return calcularCumplimientoCompromiso(s.vacantes, altas, bajas)
+}
+
+/** Mes: suma de % semanales ÷ número de semanas del mes. */
+export function promedioCumplimientoSemanas(semanas: CompromisoSemana[]): number {
+  if (!semanas.length) return 0
+  const sum = semanas.reduce((acc, s) => acc + cumplimientoSemana(s), 0)
+  return Math.round((sum / semanas.length) * 10) / 10
 }
 
 function mergeNombres(listas: string[][]): string[] {
@@ -56,8 +74,7 @@ function mergeNombres(listas: string[][]): string[] {
 }
 
 function semanaToPeriodo(s: CompromisoSemana): CompromisoPeriodo {
-  const altas = s.altasNombres.length || s.altas
-  const bajas = s.bajasNombres.length || s.bajas
+  const { altas, bajas } = altasBajasSemana(s)
   return {
     id: s.id,
     label: s.fechaLabel,
@@ -66,12 +83,7 @@ function semanaToPeriodo(s: CompromisoSemana): CompromisoPeriodo {
     vacantes: s.vacantes,
     puesto: s.puesto,
     contrataciones: s.contrataciones,
-    cumplimiento: calcularCumplimientoCompromiso(
-      s.vacantes,
-      altas,
-      bajas,
-      s.cumplimiento,
-    ),
+    cumplimiento: cumplimientoSemana(s),
     altas,
     bajas,
     altasNombres: s.altasNombres,
@@ -116,7 +128,7 @@ export function compromisosPorMes(
         vacantes,
         puesto: semanas.find((x) => x.puesto)?.puesto ?? '',
         contrataciones,
-        cumplimiento: calcularCumplimientoCompromiso(vacantes, altas, bajas),
+        cumplimiento: promedioCumplimientoSemanas(semanas),
         altas,
         bajas,
         altasNombres,
@@ -158,7 +170,7 @@ export function resumenGeneralCompromisos(
   const bajas =
     bajasNombres.length ||
     semanas.reduce((sum, x) => sum + (x.bajasNombres.length || x.bajas), 0)
-  const vacantes = recuentoVacantesSemanas(semanas)
+  const vacantes = sumaVacantesSemanas(semanas)
 
   return {
     id: 'general',
@@ -168,7 +180,7 @@ export function resumenGeneralCompromisos(
     vacantes,
     puesto: '',
     contrataciones: semanas.reduce((sum, x) => sum + x.contrataciones, 0),
-    cumplimiento: calcularCumplimientoCompromiso(vacantes, altas, bajas),
+    cumplimiento: promedioCumplimientoSemanas(semanas),
     altas,
     bajas,
     altasNombres,
@@ -299,9 +311,7 @@ export function tendenciaCompromisos(compromisos: CompromisoSemana[]) {
 }
 
 export function promedioCumplimiento(compromisos: CompromisoSemana[]) {
-  if (!compromisos.length) return 0
-  const sum = compromisos.reduce((s, c) => s + c.cumplimiento, 0)
-  return sum / compromisos.length
+  return promedioCumplimientoSemanas(compromisos)
 }
 
 export function nombreCorto(nombre: string): string {
