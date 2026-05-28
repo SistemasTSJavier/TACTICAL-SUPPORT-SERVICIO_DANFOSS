@@ -1,8 +1,6 @@
 import { publicAssetPath } from '@/lib/basePath'
 import { cn } from '@/lib/utils'
 
-const LOGO_SRC = publicAssetPath('tactical-support-logo.png')
-
 type LogoProps = {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   showText?: boolean
@@ -24,11 +22,12 @@ export function Logo({
   dark = false,
 }: LogoProps) {
   const s = sizes[size]
+  const logoSrc = publicAssetPath('tactical-support-logo.png')
 
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <img
-        src={LOGO_SRC}
+        src={logoSrc}
         alt="Tactical Support"
         className={cn(s.img, 'shrink-0 object-contain')}
       />

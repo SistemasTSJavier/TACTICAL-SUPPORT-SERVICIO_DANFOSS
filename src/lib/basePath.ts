@@ -14,14 +14,23 @@ export function appBasename(): string {
   return '/'
 }
 
-/** Ruta pública de un archivo en /public (respeta BASE_URL de Vite). */
+/**
+ * Ruta de un archivo en /public.
+ * En GitHub Pages (subrutas como /presentacion) usa la raíz del sitio, no ./ relativo.
+ */
 export function publicAssetPath(fileName: string): string {
-  const base = import.meta.env.BASE_URL
   const clean = fileName.replace(/^\//, '')
+  const base = import.meta.env.BASE_URL || '/'
 
-  if (base && base !== './' && base !== '.') {
-    return `${base}${clean}`
+  if (import.meta.env.DEV || base === '/' || base === '') {
+    return `/${clean}`
   }
 
-  return `/${clean}`
+  if (typeof window !== 'undefined') {
+    const siteRoot = `${window.location.origin}${appBasename()}/`
+    return `${siteRoot}${clean}`
+  }
+
+  const prefix = base.endsWith('/') ? base : `${base}/`
+  return `${prefix}${clean}`
 }
